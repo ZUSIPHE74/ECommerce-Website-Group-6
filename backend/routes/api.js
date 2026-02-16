@@ -1,23 +1,17 @@
-const express = require('express');
+import express from 'express';
+import loginController from '../controllers/loginController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
+
 const router = express.Router();
 
-// 1st PAGE
-router.get('/', (req, res) => {
-  res.json({ message: "Still waiting for the page name" });
-});
+router.post('/register', loginController.registerUser);
+router.post('/login', loginController.loginUser);
 
-// 2nd PAGE
-router.get('/', (req, res) => {
-  res.json({ message: "Still waiting for the page name" });
-});
+router.get('/user/profile', authMiddleware, loginController.getUserProfile);
+router.put('/user/profile', authMiddleware, loginController.updateUserProfile);
+router.post('/forgot-password', loginController.forgotPassword);
 
-// 3rd PAGE
-router.get('/', (req, res) => {
-  res.json({ message: "Still waiting for the page name" });
-});
+router.get('/countries', loginController.getCountries);
+router.get('/currencies', loginController.getCurrencies);
 
-// 4th PAGE
-router.get('/', (req, res) => {
-  res.json({ message: "Still waiting for the page name" });
-});
-module.exports = router;
+export default router;
