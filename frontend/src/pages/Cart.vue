@@ -2,91 +2,114 @@
   <section class="cart">
     <h2>Shopping Cart</h2>
 
-    <div v-if="cart.length === 0" class="empty-state">
-      <p>Your cart is empty.</p>
-    </div>
+    <!-- Show if cart is empty -->
+    <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
 
+    <!-- Show cart items -->
     <div v-else>
-      <div class="cart-list">
-        <article v-for="item in cart" :key="item.id" class="cart-item">
-          <div>
-            <h3>{{ item.name }}</h3>
-            <p>Price: ${{ Number(item.price).toFixed(2) }}</p>
-            <p>Qty: {{ item.quantity }}</p>
-          </div>
-
-          <p class="line-total">
-            ${{ (Number(item.price) * Number(item.quantity)).toFixed(2) }}
-          </p>
-        </article>
-      </div>
+      <article v-for="item in cart" :key="item.id" class="item">
+        <div>
+          <h3>{{ item.name }}</h3>
+          <p>${{ Number(item.price).toFixed(2) }} x {{ item.quantity }}</p>
+        </div>
+        <strong>${{ (Number(item.price) * Number(item.quantity)).toFixed(2) }}</strong>
+      </article>
 
       <div class="summary">
+        <!-- Totals -->
         <p>Items: {{ cartCount }}</p>
         <p>Total: ${{ Number(cartTotal).toFixed(2) }}</p>
+
+        <!-- Checkout button -->
+        <button 
+          v-if="cart.length > 0" 
+          @click="goToCheckout" 
+          class="checkout-btn"
+        >
+          Proceed to Checkout
+        </button>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
-import { useStore } from 'vuex';
+import { computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
-const store = useStore();
-const userId = 1;
+const props = defineProps({
+  userId: {
+    type: [Number, String],
+    default: null
+  }
+})
 
-const cart = computed(() => store.state.Cart || []);
-const cartCount = computed(() => store.getters.cartCount || 0);
-const cartTotal = computed(() => store.getters.cartTotal || 0);
+const store = useStore()
+const router = useRouter()
 
+// Cart data from Vuex
+const cart = computed(() => store.state.Cart || [])
+const cartCount = computed(() => store.getters.cartCount || 0)
+const cartTotal = computed(() => store.getters.cartTotal || 0)
+
+// Fetch cart for the user
 onMounted(() => {
-  store.dispatch('fetchCart', userId);
-});
+  if (props.userId) store.dispatch('fetchCart', props.userId)
+})
+
+// Go to checkout page
+function goToCheckout() {
+  router.push('/checkout')
+}
 </script>
 
 <style scoped>
 .cart {
-  max-width: 760px;
+  max-width: 700px;
   margin: 0 auto;
 }
 
-.empty-state {
-  padding: 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+.empty {
+  color: #475569;
 }
 
-.cart-list {
-  display: grid;
-  gap: 12px;
-}
-
-.cart-item {
+.item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.cart-item h3 {
-  margin: 0 0 6px;
+.item h3 {
+  margin: 0;
+  font-size: 16px;
 }
 
-.cart-item p {
-  margin: 4px 0;
-}
-
-.line-total {
-  font-weight: 700;
+.item p {
+  margin: 4px 0 0;
+  color: #475569;
 }
 
 .summary {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid #cbd5e1;
+  margin-top: 12px;
   font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.checkout-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.checkout-btn:hover {
+  background-color: #1e3a8a;
 }
 </style>
