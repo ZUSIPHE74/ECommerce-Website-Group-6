@@ -8,7 +8,7 @@ export const getAllProducts = async (req, res) => {
         p.id,
         p.name,
         p.description,
-        p.price_usd,
+        p.price,
         p.image_url,
         p.stock,
         p.created_at,
@@ -28,7 +28,7 @@ export const getAllProducts = async (req, res) => {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: parseFloat(product.price_usd),
+      price: parseFloat(product.price),
       oldPrice: null, // You can add logic for old prices if needed
       onSale: false, // You can add logic for sales if needed
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
@@ -62,7 +62,7 @@ export const getProductById = async (req, res) => {
         p.id,
         p.name,
         p.description,
-        p.price_usd,
+        p.price,
         p.image_url,
         p.stock,
         p.created_at,
@@ -89,7 +89,7 @@ export const getProductById = async (req, res) => {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: parseFloat(product.price_usd),
+      price: parseFloat(product.price),
       oldPrice: null,
       onSale: false,
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
@@ -123,7 +123,7 @@ export const getProductsByCategory = async (req, res) => {
         p.id,
         p.name,
         p.description,
-        p.price_usd,
+        p.price,
         p.image_url,
         p.stock,
         p.created_at,
@@ -143,7 +143,7 @@ export const getProductsByCategory = async (req, res) => {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: parseFloat(product.price_usd),
+      price: parseFloat(product.price),
       oldPrice: null,
       onSale: false,
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
@@ -184,7 +184,7 @@ export const searchProducts = async (req, res) => {
         p.id,
         p.name,
         p.description,
-        p.price_usd,
+        p.price,
         p.image_url,
         p.stock,
         p.created_at,
@@ -204,7 +204,7 @@ export const searchProducts = async (req, res) => {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: parseFloat(product.price_usd),
+      price: parseFloat(product.price),
       oldPrice: null,
       onSale: false,
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
@@ -231,10 +231,10 @@ export const searchProducts = async (req, res) => {
 // Create a new product (admin only)
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price_usd, category_id, image_url, stock } = req.body;
+    const { name, description, price, category_id, image_url, stock } = req.body;
     
     // Validate required fields
-    if (!name || !description || !price_usd || !category_id) {
+    if (!name || !description || !price || !category_id) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
@@ -242,8 +242,8 @@ export const createProduct = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      'INSERT INTO products (name, description, price_usd, category_id, image_url, stock) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, description, price_usd, category_id, image_url || null, stock || 0]
+      'INSERT INTO products (name, description, price, category_id, image_url, stock) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, description, price, category_id, image_url || null, stock || 0]
     );
 
     res.status(201).json({
@@ -268,11 +268,11 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price_usd, category_id, image_url, stock } = req.body;
+    const { name, description, price, category_id, image_url, stock } = req.body;
     
     const [result] = await pool.query(
-      'UPDATE products SET name = ?, description = ?, price_usd = ?, category_id = ?, image_url = ?, stock = ? WHERE id = ?',
-      [name, description, price_usd, category_id, image_url, stock, id]
+      'UPDATE products SET name = ?, description = ?, price  = ?, category_id = ?, image_url = ?, stock = ? WHERE id = ?',
+      [name, description, price, category_id, image_url, stock, id]
     );
 
     if (result.affectedRows === 0) {
