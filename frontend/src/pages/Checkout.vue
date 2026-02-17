@@ -1,13 +1,161 @@
 <template>
-  <div>
-    <h1>Checkout Page</h1>
-    <p>This page will be developed by the assigned team member.</p>
-  </div>
+    <section class="checkout">
+      <h2>Checkout</h2>
+
+      <!-- Show if cart is empty -->
+      <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
+
+      <div v-else>
+        <!-- Display cart items in checkout -->
+         <div v-for="items in cart" :key="items.id" class="checkout-item">
+            <p>{{ items.name }} x {{ items.quantity }}</p>
+            <p>${{ (Number(items.price) * Number(items.quantity)).toFixed(2) }}</p>
+         </div>
+
+        <!-- Total summary -->
+        <div class="checkout-summary">
+            <p>Subtotal: ${{ Number(cartTotal).toFixed(2) }}</p>
+            <p>Shipping: ${{ shippingCost.toFixed(2) }}</p>
+            <p><strong>Total: ${{ totalWithShipping.toFixed(2) }}</strong></p>
+        </div>
+
+            <!-- Shipping info -->
+             <div class="checkout-form">
+                <h3>Shipping Info</h3>
+                <input v-model="shipping.name" type="text" placeholder="Full Name" required />
+                <input v-model="shipping.address" type="text" placeholder="Address" required />
+                <input v-model="shipping.email" type="email" placeholder="Email" required />
+                <input v-model="shipping.phone" type="tel" placeholder="Phone Number" required />
+             </div>
+
+            <!-- Payment method -->
+             <h3>Payment Method</h3>
+             <select v-model="paymentMethod" required>
+                <option value="">Select Payment</option>
+                <option value="card">Credit/Debit Card</option>
+                <option value="paypal">PayPal</option>
+             </select>
+
+             <!-- Place Order-->
+              <button @click="placeOrder" class="place-order-btn">
+                Place Order
+              </button>
+      </div>
+    </section>
 </template>
 
 <script setup>
-// Placeholder for future profile logic
+import router from '@/router'
+import { computed, reactive } from 'vue'
+import { useStore } from 'vuex' 
+
+const store = useStore()
+
+// Cart data from Vuex
+const cart = computed(() => store.state.Cart || [])
+const cartTotal = computed(() => store.getters.cartTotal || 0)
+
+// Shipping info form
+const shipping = reactive({
+  name: '',
+  address: '',
+  email: '',
+  phone: ''
+})
+
+// Payment method
+let paymentMethod = ''
+
+// Shipping cost 
+const shippingCost = computed(() => {
+    // Free shipping for orders over R1000 otherwise R500
+  return cartTotal.value > 1000 ? 0 : 500
+})
+
+// Total with shipping
+const totalWithShipping = computed(() => cartTotal.value + shippingCost.value)
+
+// Place order function
+function placeOrder() {
+    if (!cart.value.length) return alert('Your cart is empty.')
+    if (!shipping.name || !shipping.address || !shipping.email || !shipping.phone) 
+        return alert('Please fill in all shipping information.')
+    if (!paymentMethod) return alert('Please select a payment method.')
+
+    // Dispatch order to Vuex / backend here
+    store.dispatch('placeOrder', {
+        cart: cart.value,
+        shipping: { ...shipping },
+        paymentMethod,
+        total: totalWithShipping.value
+    })
+    alert('Order placed successfully!')
+
+    // Clear cart and redirect
+    store.dispatch('clearCart')
+    router.push('/order-confirmation')
+}
 </script>
-<style scoped> 
-/* Placeholder for future profile styles */ 
+
+<style scoped>
+.checkout {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f9fafb;
+}
+
+.checkout h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.checkout-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.checkout-summary {
+  margin-top: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.checkout-form {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.checkout-form input,
+.checkout-form select {
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.place-order-btn {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background-color: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.place-order-btn:hover {
+  background-color: #1e3a8a;
+}
+
+.empty {
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+}
 </style>
