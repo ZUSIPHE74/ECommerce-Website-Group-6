@@ -55,7 +55,8 @@ const cartTotal = computed(() => store.getters.cartTotal || 0)
 
 // Fetch cart for the user
 onMounted(() => {
-  if (props.userId) store.dispatch('fetchCart', props.userId)
+  const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
+  store.dispatch('fetchCart', resolvedUserId)
 })
 
 // Go to checkout page

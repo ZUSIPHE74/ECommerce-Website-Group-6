@@ -11,12 +11,30 @@ getters: {
     },
     cartTotal(state) {
         return state.Cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    },
+
+    // Shipping (free over R1000)
+    shippingCost(state, getters) {
+        return getters.cartTotal > 1000 ? 0 : 500
+    },
+
+    // Customs / import charges (10% of total)
+    customsCharges(state, getters) {
+        return getters.cartTotal * 0.10 // 10% import charge
+    },
+
+    // Total with shipping and customs charges
+    totalWithShipping(state, getters) {
+        return getters.cartTotal + getters.shippingCost + getters.customsCharges
     }
 },
 
 mutations: {
     SET_CART(state, data) {
         state.Cart = data;
+    },
+    CLEAR_CART(state) {
+        state.Cart = [];
     }
 },
 
@@ -38,7 +56,7 @@ actions: {
 
     async updateQuantity({ dispatch }, payload) {
         await fetch('http://localhost:5050/cart', {
-            method: 'POST',
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
@@ -52,6 +70,10 @@ actions: {
             body: JSON.stringify(payload)
         }) 
         dispatch('fetchCart', payload.user_Id);
+    },
+
+    clearCart({ commit }) {
+        commit('CLEAR_CART');
     }
 }
 })
