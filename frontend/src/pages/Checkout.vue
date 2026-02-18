@@ -54,8 +54,10 @@ import { useStore } from 'vuex'
 const store = useStore()
 
 // Cart data from Vuex
-const cart = computed(() => store.state.Cart || [])
-const cartTotal = computed(() => store.getters.cartTotal || 0)
+const cartTotal = computed(() => store.getters.cartTotal)
+const shippingCost = computed(() => store.getters.shippingCost)
+const customsCharges = computed(() => store.getters.customsCharges)
+const totalWithShipping = computed(() => store.getters.totalWithShipping)
 
 // Shipping info form
 const shipping = reactive({
@@ -67,22 +69,6 @@ const shipping = reactive({
 
 // Payment method
 let paymentMethod = ''
-
-// Shipping cost 
-const shippingCost = computed(() => {
-    // Free shipping for orders over R1000 otherwise R500
-  return cartTotal.value > 1000 ? 0 : 500
-})
-
-// Customs / import charges (10% of total)
-const customsCharges = computed(() => {
-  return cartTotal.value * 0.10 // 10% import charge
-})
-
-// Total with shipping and customs charges
-const totalWithShipping = computed(() => {
-  return cartTotal.value + shippingCost.value + customsCharges.value
-}) 
 
 // Place order function
 function placeOrder() {
