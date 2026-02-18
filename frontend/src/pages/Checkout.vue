@@ -16,6 +16,7 @@
         <div class="checkout-summary">
             <p>Subtotal: ${{ Number(cartTotal).toFixed(2) }}</p>
             <p>Shipping: ${{ shippingCost.toFixed(2) }}</p>
+            <p>Import Charges: ${{ customsCharges.toFixed(2) }}</p>
             <p><strong>Total: ${{ totalWithShipping.toFixed(2) }}</strong></p>
         </div>
 
@@ -53,8 +54,10 @@ import { useStore } from 'vuex'
 const store = useStore()
 
 // Cart data from Vuex
-const cart = computed(() => store.state.Cart || [])
-const cartTotal = computed(() => store.getters.cartTotal || 0)
+const cartTotal = computed(() => store.getters.cartTotal)
+const shippingCost = computed(() => store.getters.shippingCost)
+const customsCharges = computed(() => store.getters.customsCharges)
+const totalWithShipping = computed(() => store.getters.totalWithShipping)
 
 // Shipping info form
 const shipping = reactive({
@@ -66,15 +69,6 @@ const shipping = reactive({
 
 // Payment method
 let paymentMethod = ''
-
-// Shipping cost 
-const shippingCost = computed(() => {
-    // Free shipping for orders over R1000 otherwise R500
-  return cartTotal.value > 1000 ? 0 : 500
-})
-
-// Total with shipping
-const totalWithShipping = computed(() => cartTotal.value + shippingCost.value)
 
 // Place order function
 function placeOrder() {

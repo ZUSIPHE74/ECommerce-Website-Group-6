@@ -11,6 +11,21 @@ getters: {
     },
     cartTotal(state) {
         return state.Cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    },
+
+    // Shipping (free over R1000)
+    shippingCost(state, getters) {
+        return getters.cartTotal > 1000 ? 0 : 500
+    },
+
+    // Customs / import charges (10% of total)
+    customsCharges(state, getters) {
+        return getters.cartTotal * 0.10 // 10% import charge
+    },
+
+    // Total with shipping and customs charges
+    totalWithShipping(state, getters) {
+        return getters.cartTotal + getters.shippingCost + getters.customsCharges
     }
 },
 
