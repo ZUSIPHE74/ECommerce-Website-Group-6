@@ -177,15 +177,6 @@ CREATE TABLE products (
   FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
-INSERT INTO products (category_id, name, description, price_usd, stock) VALUES
-(1,'Wireless Headphones','Bluetooth noise cancelling headphones',1499.99,50),
-(1,'Gaming Mouse','RGB high precision mouse',499.99,100),
-(1,'Smart Watch','Fitness tracking smartwatch',1999.99,40),
-(2,'Laptop Backpack','Waterproof travel backpack',799.99,70),
-(3,'Running Shoes','Lightweight sport shoes',1299.99,60),
-(3,'Leather Jacket','Genuine leather jacket',2499.99,25),
-(4,'Coffee Maker','Automatic drip coffee machine',899.99,30),
-(4,'LED Desk Lamp','Adjustable brightness desk lamp',299.99,80);
 
 CREATE TABLE cart_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
