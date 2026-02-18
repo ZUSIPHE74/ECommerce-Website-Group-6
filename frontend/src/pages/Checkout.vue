@@ -16,6 +16,7 @@
         <div class="checkout-summary">
             <p>Subtotal: ${{ Number(cartTotal).toFixed(2) }}</p>
             <p>Shipping: ${{ shippingCost.toFixed(2) }}</p>
+            <p>Import Charges: ${{ customsCharges.toFixed(2) }}</p>
             <p><strong>Total: ${{ totalWithShipping.toFixed(2) }}</strong></p>
         </div>
 
@@ -73,8 +74,15 @@ const shippingCost = computed(() => {
   return cartTotal.value > 1000 ? 0 : 500
 })
 
-// Total with shipping
-const totalWithShipping = computed(() => cartTotal.value + shippingCost.value)
+// Customs / import charges (10% of total)
+const customsCharges = computed(() => {
+  return cartTotal.value * 0.10 // 10% import charge
+})
+
+// Total with shipping and customs charges
+const totalWithShipping = computed(() => {
+  return cartTotal.value + shippingCost.value + customsCharges.value
+}) 
 
 // Place order function
 function placeOrder() {
