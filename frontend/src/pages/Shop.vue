@@ -151,7 +151,7 @@ export default {
       this.error = null;
       
       try {
-        const response = await axios.get('http://localhost:3000/api/products');
+        const response = await axios.get('http://localhost:5050/api/products');
         
         if (response.data.success) {
           this.products = response.data.data;
