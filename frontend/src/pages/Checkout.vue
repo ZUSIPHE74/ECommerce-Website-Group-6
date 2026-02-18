@@ -48,16 +48,22 @@
 
 <script setup>
 import router from '@/router'
-import { computed, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useStore } from 'vuex' 
 
 const store = useStore()
+const userId = Number(localStorage.getItem('userId')) || 1
 
 // Cart data from Vuex
+const cart = computed(() => store.state.Cart || [])
 const cartTotal = computed(() => store.getters.cartTotal)
 const shippingCost = computed(() => store.getters.shippingCost)
 const customsCharges = computed(() => store.getters.customsCharges)
 const totalWithShipping = computed(() => store.getters.totalWithShipping)
+
+onMounted(() => {
+  store.dispatch('fetchCart', userId)
+})
 
 // Shipping info form
 const shipping = reactive({
@@ -68,25 +74,18 @@ const shipping = reactive({
 })
 
 // Payment method
-let paymentMethod = ''
+const paymentMethod = ref('')
 
 // Place order function
 function placeOrder() {
     if (!cart.value.length) return alert('Your cart is empty.')
     if (!shipping.name || !shipping.address || !shipping.email || !shipping.phone) 
         return alert('Please fill in all shipping information.')
-    if (!paymentMethod) return alert('Please select a payment method.')
+    if (!paymentMethod.value) return alert('Please select a payment method.')
 
-    // Dispatch order to Vuex / backend here
-    store.dispatch('placeOrder', {
-        cart: cart.value,
-        shipping: { ...shipping },
-        paymentMethod,
-        total: totalWithShipping.value
-    })
     alert('Order placed successfully!')
 
-    // Clear cart and redirect
+    // Clear local checkout state and redirect.
     store.dispatch('clearCart')
     router.push('/order-confirmation')
 }
