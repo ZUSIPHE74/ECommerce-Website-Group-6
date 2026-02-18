@@ -34,6 +34,7 @@
                 <option value="">Select Payment</option>
                 <option value="card">Credit/Debit Card</option>
                 <option value="paypal">PayPal</option>
+                <option value="eft">EFT</option>
              </select>
 
              <!-- Place Order-->
