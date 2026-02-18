@@ -32,6 +32,9 @@ getters: {
 mutations: {
     SET_CART(state, data) {
         state.Cart = data;
+    },
+    CLEAR_CART(state) {
+        state.Cart = [];
     }
 },
 
@@ -53,7 +56,7 @@ actions: {
 
     async updateQuantity({ dispatch }, payload) {
         await fetch('http://localhost:5050/cart', {
-            method: 'POST',
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
@@ -67,6 +70,10 @@ actions: {
             body: JSON.stringify(payload)
         }) 
         dispatch('fetchCart', payload.user_Id);
+    },
+
+    clearCart({ commit }) {
+        commit('CLEAR_CART');
     }
 }
 })

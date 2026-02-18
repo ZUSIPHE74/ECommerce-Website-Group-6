@@ -55,14 +55,8 @@ const cartTotal = computed(() => store.getters.cartTotal || 0)
 
 // Fetch cart for the user
 onMounted(() => {
-  if (props.userId) {
-    store.dispatch('fetchCart', props.userId)
-    return
-  }
-
-  // Keep Cart.vue fully store-driven even without a backend user id.
-  const localCart = JSON.parse(localStorage.getItem('cart') || '[]')
-  store.commit('SET_CART', localCart)
+  const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
+  store.dispatch('fetchCart', resolvedUserId)
 })
 
 // Go to checkout page
