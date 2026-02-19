@@ -2,20 +2,12 @@
   <div class="shop">
     <h1 class="page-title">Our Products</h1>
     
-    <!-- Loading State -->
     <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
+      <div class="arc-spinner"></div>
       <p>Loading products...</p>
     </div>
     
-    <!-- Error State -->
-    <div v-else-if="error" class="error-state">
-      <p>{{ error }}</p>
-      <button @click="fetchProducts" class="btn-retry">Try Again</button>
-    </div>
-    
     <template v-else>
-      <!-- Filter/Sort Bar -->
       <div class="shop-controls">
         <div class="filter-section">
           <label for="category">Category:</label>
@@ -39,7 +31,6 @@
         </div>
       </div>
       
-      <!-- Products Grid -->
       <div class="products-grid">
         <div v-for="product in displayedProducts" :key="product.id" class="product-card">
           <div class="product-image">
@@ -64,36 +55,20 @@
               </div>
             </div>
             
-            <div class="product-actions">
-              <button 
-                class="btn-add-to-cart"
-                @click="addToCart(product)"
-                :disabled="isAddingToCart || product.stock === 0"
-              >
-                <span v-if="!isAddingToCart && product.stock > 0">Add to Cart</span>
-                <span v-else-if="product.stock === 0">Out of Stock</span>
-                <span v-else>Adding...</span>
-              </button>
-              
-              <button 
-                class="btn-buy-now" 
-                @click="buyNow(product)"
-                :disabled="product.stock === 0"
-              >
-                Buy Now
-              </button>
-            </div>
+            <button 
+              class="btn-add-to-cart"
+              @click="addToCart(product)"
+              :disabled="isAddingToCart || product.stock === 0"
+            >
+              <span v-if="!isAddingToCart && product.stock > 0">Add to Cart</span>
+              <span v-else-if="product.stock === 0">Out of Stock</span>
+              <span v-else>Adding...</span>
+            </button>
           </div>
         </div>
       </div>
-      
-      <!-- Empty State -->
-      <div v-if="displayedProducts.length === 0" class="empty-state">
-        <p>No products found in this category.</p>
-      </div>
     </template>
     
-    <!-- Toast Notification -->
     <div v-if="showToast" class="toast-notification" :class="toastType">
       {{ toastMessage }}
     </div>
@@ -267,158 +242,145 @@ export default {
   }
 }
 </script>
-
 <style scoped>
-/* Add loading spinner styles */
-.loading-state {
-  text-align: center;
-  padding: 50px;
-}
-
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #1e293b;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-state {
-  text-align: center;
-  padding: 50px;
-  color: #ff4444;
-}
-
-.btn-retry {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #1e293b;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.out-of-stock-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: #999;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
 .shop {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  position: relative;
+  background: #121212;
+  min-height: 100vh;
+  padding: 40px 20px;
+  color: white;
 }
 
 .page-title {
   font-size: 2.5rem;
-  color: #333;
-  margin-bottom: 30px;
+  color: #fff;
+  margin-bottom: 40px;
   text-align: center;
+  letter-spacing: 2px;
 }
 
+/* 1. Filter Bar Styling */
 .shop-controls {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 40px;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 
-.filter-section,
-.sort-section {
+.filter-section, .sort-section {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
-.filter-section label,
-.sort-section label {
-  font-weight: 600;
-  color: #555;
+.filter-section label, .sort-section label {
+  color: #00ffff; /* Signature Cyan for labels */
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
-.filter-section select,
-.sort-section select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+/* 1. The White Frame Dropdown Styling */
+.filter-section select, .sort-section select {
+  background-color: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Muted white frame */
+  padding: 10px 35px 10px 15px;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 1px;
   cursor: pointer;
   outline: none;
+  border-radius: 0; /* Modern sharp look */
+  
+  /* Custom Arrow Design */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300ffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  transition: all 0.3s ease;
 }
 
-.filter-section select:hover,
-.sort-section select:hover {
-  border-color: #1e293b;
+/* 2. Hover & Focus States */
+.filter-section select:hover, .sort-section select:hover {
+  border-color: #ffffff; /* Brightens to full white frame */
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
 }
 
+.filter-section select:focus, .sort-section select:focus {
+  border-color: #00ffff; /* Glows Cyan when clicked */
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+}
+
+  select option {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 10px;
+}
+
+/* 2. White Frame Card Styling */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
-  margin-bottom: 40px;
+  gap: 30px;
 }
 
 .product-card {
-  background: white;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* White frame card */
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: all 0.3s;
 }
 
 .product-card:hover {
+  border-color: #00ffff;
   transform: translateY(-5px);
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
 }
 
 .product-image {
+  height: 220px;
   position: relative;
-  height: 200px;
-  overflow: hidden;
 }
 
 .product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
 }
 
-.product-card:hover .product-image img {
-  transform: scale(1.05);
-}
-
-.sale-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #ff4444;
+/* 3. White Frame Button Styling */
+.btn-add-to-cart {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
   color: white;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 12px;
+  border: 2px solid white; /* White frame border */
   font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
+.btn-add-to-cart:hover:not(:disabled) {
+  background: white;
+  color: #121212;
+}
+
+.btn-add-to-cart:disabled {
+  border-color: #444;
+  color: #444;
+  cursor: not-allowed;
+}
+
+/* 4. Product Details */
 .product-info {
   padding: 20px;
 }
@@ -426,168 +388,50 @@ export default {
 .product-title {
   font-size: 1.2rem;
   margin-bottom: 10px;
-  color: #333;
+  color: #fff;
 }
 
 .product-description {
+  color: #888;
   font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
-
-.product-price-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.price-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.old-price {
-  font-size: 0.9rem;
-  color: #999;
-  text-decoration: line-through;
+  margin-bottom: 20px;
 }
 
 .current-price {
   font-size: 1.3rem;
   font-weight: bold;
-  color: #1e293b;
+  color: white;
 }
 
 .current-price.on-sale {
-  color: #ff4444;
-}
-
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  color: #00ffff;
 }
 
 .stars {
-  color: #ffc107;
-  font-size: 1.1rem;
+  color: #00ffff;
 }
 
-.rating-count {
-  font-size: 0.8rem;
-  color: #999;
+/* Custom UI Elements */
+.arc-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-top: 3px solid #00ffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
 }
 
-.product-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.btn-add-to-cart,
-.btn-buy-now {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.btn-add-to-cart {
-  background: #1e293b;
-  color: white;
-}
-
-.btn-add-to-cart:hover:not(:disabled) {
-  background: #2d3b4f;
-}
-
-.btn-add-to-cart:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-buy-now {
-  background: #ff4444;
-  color: white;
-}
-
-.btn-buy-now:hover {
-  background: #ff6666;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 50px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  color: #666;
-  font-size: 1.1rem;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .toast-notification {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  padding: 15px 25px;
-  border-radius: 5px;
-  color: white;
-  font-weight: 500;
-  animation: slideIn 0.3s ease;
-  z-index: 1000;
-}
-
-.toast-notification.success {
-  background: #4caf50;
-}
-
-.toast-notification.error {
-  background: #f44336;
-}
-
-.toast-notification.info {
-  background: #2196f3;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .shop-controls {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .filter-section,
-  .sort-section {
-    width: 100%;
-  }
-  
-  .filter-section select,
-  .sort-section select {
-    flex: 1;
-  }
-  
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
-  }
-  
-  .product-actions {
-    flex-direction: column;
-  }
+  padding: 15px 30px;
+  background: white;
+  color: #121212;
+  font-weight: bold;
+  border-left: 5px solid #00ffff;
 }
 </style>
