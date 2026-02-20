@@ -92,6 +92,9 @@ app.delete('/cart', async (req, res) => {
   res.json({ message: 'Item removed' });
 });
 
+// =================
+// SERVER
+// =================
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
