@@ -34,6 +34,14 @@
                 <option value="Other">Other</option>
               </select>
             </div>
+            <div class="form-group">
+              <label>Country</label>
+              <select v-model="form.country_id" @change="onCountryChange">
+                <option v-for="country in countries" :key="country.id" :value="country.id">
+                  {{ country.country_name }}
+                </option>
+              </select>
+            </div>
           </div>
           
           <button type="submit" class="btn">Save Changes</button>
@@ -63,6 +71,7 @@ export default {
         country_id: '',
         currency_code: ''
       },
+      countries: [],
       message: '',
       error: ''
     }
@@ -75,26 +84,50 @@ export default {
     }
 
     try {
-      const response = await fetch('http://localhost:5050/api/user/profile', {
+      const profileResponse = await fetch('/api/user/profile', {
         headers: { 'x-auth-token': token }
       });
       
-      if (!response.ok) throw new Error('Failed to load profile');
+      if (!profileResponse.ok) throw new Error('Failed to load profile');
       
-      this.user = await response.json();
+      this.user = await profileResponse.json();
       this.form = { ...this.user };
     } catch (err) {
       this.logout();
+      return;
     }
+
+    await this.loadCountries();
   },
   methods: {
+    async loadCountries() {
+      try {
+        const countriesResponse = await fetch('/api/countries');
+        if (!countriesResponse.ok) {
+          throw new Error(`Failed to load countries (${countriesResponse.status})`);
+        }
+
+        const countries = await countriesResponse.json();
+        this.countries = Array.isArray(countries) ? countries : [];
+      } catch (err) {
+        console.error('Countries load failed:', err);
+        this.countries = [];
+        this.error = 'Countries are temporarily unavailable. You can still edit other fields.';
+      }
+    },
+    onCountryChange() {
+      const selectedCountry = this.countries.find(c => c.id == this.form.country_id);
+      if (selectedCountry) {
+        this.form.currency_code = selectedCountry.currency_code;
+      }
+    },
     async updateProfile() {
       try {
         this.message = '';
         this.error = '';
         const token = localStorage.getItem('token');
         
-        const response = await fetch('http://localhost:5050/api/user/profile', {
+        const response = await fetch('/api/user/profile', {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
@@ -149,7 +182,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 32px;
   margin: 0 auto 10px;
 }
 
@@ -161,7 +194,7 @@ export default {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 16px;
   border-bottom: 1px solid #eee;
   transition: 0.2s;
 }
@@ -184,13 +217,13 @@ export default {
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 8px;
+  font-size: 14.4px;
   font-weight: bold;
 }
 
@@ -203,3 +236,4 @@ export default {
 .success-msg { color: green; margin-top: 10px; }
 .error-msg { color: red; margin-top: 10px; }
 </style>
+

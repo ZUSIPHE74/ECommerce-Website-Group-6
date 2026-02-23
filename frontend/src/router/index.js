@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// Pages
 import Home from '../pages/Home.vue'
 import About from '../pages/About.vue'
 import Shop from '../pages/Shop.vue'
@@ -19,16 +18,13 @@ const routes = [
   { path: '/cart', component: Cart },
   { path: '/checkout', component: Checkout },
 
-  // Auth
   { path: '/login', component: Login },
   { path: '/register', component: Register },
   { path: '/forgot-password', component: ForgotPassword },
 
-  // Account
   { path: '/account/profile', component: Profile },
   { path: '/dashboard', component: Dashboard },
 
-  // Catch-all
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 

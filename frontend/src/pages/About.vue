@@ -82,7 +82,7 @@ const values = [
 }
 
 .glitch-text {
-  font-size: 3.5rem;
+  font-size: 56px;
   letter-spacing: 10px;
   font-weight: 900;
 }
@@ -97,7 +97,7 @@ const values = [
   margin: 20px auto;
   color: #888;
   line-height: 1.8;
-  font-size: 1.1rem;
+  font-size: 17.6px;
 }
 
 /* 2. Team Sections */
@@ -106,7 +106,7 @@ const values = [
 }
 
 .section-label {
-  font-size: 0.8rem;
+  font-size: 12.8px;
   color: #00ffff;
   letter-spacing: 4px;
   border-bottom: 1px solid #2a2a2a;
@@ -175,13 +175,13 @@ const values = [
 }
 
 .member-info h3 {
-  font-size: 1rem;
+  font-size: 16px;
   letter-spacing: 2px;
   margin-bottom: 5px;
 }
 
 .role-tag {
-  font-size: 0.7rem;
+  font-size: 11.2px;
   color: #00ffff;
   text-transform: uppercase;
 }
@@ -217,7 +217,7 @@ const values = [
 
 .value-item p {
   color: #666;
-  font-size: 0.85rem;
+  font-size: 13.6px;
   line-height: 1.5;
 }
 </style>
