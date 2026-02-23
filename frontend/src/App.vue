@@ -3,19 +3,28 @@
     <header class="navbar">
       <h2 class="logo">ARC<span>TRAVEL</span></h2>
 
-      <nav class="nav-links">
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/shop">Shop</RouterLink>
-        <RouterLink to="/cart">Cart</RouterLink>
-        <RouterLink v-if="!isLoggedIn" to="/login" class="auth-link">Login</RouterLink>
-        <RouterLink v-if="isLoggedIn" to="/account/profile" class="auth-link">Your Account</RouterLink>
+      <nav class="nav-icons">
+        <RouterLink to="/shop">
+          <ShoppingBag size="20" />
+        </RouterLink>
 
-        <button
-          v-if="isLoggedIn"
-          @click="logout"
-          class="logout-btn"
-        >
+        <RouterLink to="/cart">
+          <ShoppingCart size="20" />
+        </RouterLink>
+
+        <RouterLink to="/currency">
+          <Globe size="20" />
+        </RouterLink>
+
+        <RouterLink v-if="!isLoggedIn" to="/login">
+          <User size="20" />
+        </RouterLink>
+
+        <RouterLink v-if="isLoggedIn" to="/account/profile">
+          <User size="20" />
+        </RouterLink>
+
+        <button v-if="isLoggedIn" @click="logout" class="logout-btn">
           Logout
         </button>
       </nav>
@@ -24,18 +33,23 @@
     <main class="container">
       <RouterView />
     </main>
+
+    <!-- Bottom Section -->
+    <footer class="footer">
+      <RouterLink to="/about">About Us</RouterLink>
+      <RouterLink to="/contact">Contact Us</RouterLink>
+    </footer>
   </div>
 </template>
-
 <script setup>
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { ref, watch } from 'vue'
+import { ShoppingCart, User, Globe , ShoppingBag } from 'lucide-vue-next'
 
 const router = useRouter()
 
 const isLoggedIn = ref(!!localStorage.getItem('token'))
 
-// Watch localStorage changes when route changes
 watch(
   () => router.currentRoute.value.path,
   () => {
@@ -85,35 +99,41 @@ const logout = () => {
   font-weight: 300;
 }
 
-/* 3. Navigation Links (White In-Box Text Style) */
-nav a {
+.nav-icons {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.nav-icons a {
   color: #ffffff;
-  margin-left: 25px;
-  text-decoration: none;
-  font-size: 14.4px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
+  transition: 0.3s ease;
 }
 
-/* Hover State: The Arc Glow */
-nav a:hover {
+.nav-icons a:hover {
   color: #00ffff;
-  background: rgba(0, 255, 255, 0.05); /* Very subtle cyan tint */
-  border: 1px solid #00ffff;
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
-/* Active Link State */
-nav a.router-link-exact-active {
-  color: #121212;
-  background: #ffffff; /* White in-box text effect */
-  font-weight: bold;
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 30px 0;
+  background: #1a1a1a;
+  border-top: 1px solid #2a2a2a;
 }
 
+.footer a {
+  color: #aaaaaa;
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.footer a:hover {
+  color: #00ffff;
+}
 /* 4. Special Auth Styling */
 .auth-link {
   border: 1px solid #00ffff;
