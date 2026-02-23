@@ -175,32 +175,14 @@ export default {
       this.isAddingToCart = true;
       
       try {
-        // Get existing cart from localStorage or initialize empty array
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        
-        // Check if product already exists in cart
-        const existingProduct = cart.find(item => item.id === product.id);
-        
-        if (existingProduct) {
-          if (existingProduct.quantity < product.stock) {
-            existingProduct.quantity += 1;
-          } else {
-            this.showToastMessage('Cannot add more than available stock', 'error');
-            return;
-          }
-        } else {
-          cart.push({
-            ...product,
-            quantity: 1
-          });
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('cart', JSON.stringify(cart));
+        const userId = Number(localStorage.getItem('userId')) || 1;
+        await this.$store.dispatch('addToCart', {
+          user_Id: userId,
+          product_Id: product.id
+        });
         
         this.showToastMessage('Product added to cart!', 'success');
         
-        // Emit event for parent component
         this.$emit('cart-updated');
       } catch (err) {
         console.error('Error adding to cart:', err);

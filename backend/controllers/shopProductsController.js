@@ -1,46 +1,55 @@
 import pool from '../config/database.js';
 
-// Get all products with category information
+function formatProduct(product) {
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    price: parseFloat(product.price),
+    oldPrice: null,
+    onSale: false,
+    category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
+    rating: Math.round(Number(product.average_rating) || 0),
+    reviews: Number(product.review_count) || 0,
+    image: '',
+    stock: product.stock
+  };
+}
+
+const baseProductSelect = `
+  SELECT
+    p.product_id AS id,
+    p.name,
+    p.description,
+    p.price,
+    p.stock,
+    p.created_at,
+    c.category_id AS category_id,
+    c.name AS category_name,
+    COALESCE(AVG(r.rating), 0) AS average_rating,
+    COUNT(DISTINCT r.id) AS review_count
+  FROM products p
+  LEFT JOIN categories c ON p.category_id = c.category_id
+  LEFT JOIN reviews r ON p.product_id = r.product_id
+`;
+
+const baseGroupBy = `
+  GROUP BY
+    p.product_id, p.name, p.description, p.price, p.stock, p.created_at,
+    c.category_id, c.name
+`;
+
 export const getAllProducts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.image_url,
-        p.stock,
-        p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
-      GROUP BY p.id, c.id, c.name
+      ${baseProductSelect}
+      ${baseGroupBy}
       ORDER BY p.created_at DESC
     `);
 
-    // Format the products with additional fields
-    const formattedProducts = rows.map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: parseFloat(product.price),
-      oldPrice: null, // You can add logic for old prices if needed
-      onSale: false, // You can add logic for sales if needed
-      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
-      stock: product.stock
-    }));
-
     res.json({
       success: true,
-      data: formattedProducts
+      data: rows.map(formatProduct)
     });
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -52,29 +61,14 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-// Get single product by ID
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const [rows] = await pool.query(`
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.image_url,
-        p.stock,
-        p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
-      WHERE p.id = ?
-      GROUP BY p.id, c.id, c.name
+      ${baseProductSelect}
+      WHERE p.product_id = ?
+      ${baseGroupBy}
     `, [id]);
 
     if (rows.length === 0) {
@@ -84,24 +78,9 @@ export const getProductById = async (req, res) => {
       });
     }
 
-    const product = rows[0];
-    const formattedProduct = {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: parseFloat(product.price),
-      oldPrice: null,
-      onSale: false,
-      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
-      stock: product.stock
-    };
-
     res.json({
       success: true,
-      data: formattedProduct
+      data: formatProduct(rows[0])
     });
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -113,49 +92,20 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// Get products by category
 export const getProductsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
-    
+
     const [rows] = await pool.query(`
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.image_url,
-        p.stock,
-        p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
+      ${baseProductSelect}
       WHERE LOWER(c.name) = LOWER(?)
-      GROUP BY p.id, c.id, c.name
+      ${baseGroupBy}
       ORDER BY p.created_at DESC
     `, [category]);
 
-    const formattedProducts = rows.map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: parseFloat(product.price),
-      oldPrice: null,
-      onSale: false,
-      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
-      stock: product.stock
-    }));
-
     res.json({
       success: true,
-      data: formattedProducts
+      data: rows.map(formatProduct)
     });
   } catch (error) {
     console.error('Error fetching products by category:', error);
@@ -167,11 +117,10 @@ export const getProductsByCategory = async (req, res) => {
   }
 };
 
-// Search products
 export const searchProducts = async (req, res) => {
   try {
     const { q } = req.query;
-    
+
     if (!q) {
       return res.status(400).json({
         success: false,
@@ -180,43 +129,15 @@ export const searchProducts = async (req, res) => {
     }
 
     const [rows] = await pool.query(`
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.image_url,
-        p.stock,
-        p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
+      ${baseProductSelect}
       WHERE p.name LIKE ? OR p.description LIKE ?
-      GROUP BY p.id, c.id, c.name
+      ${baseGroupBy}
       ORDER BY p.created_at DESC
     `, [`%${q}%`, `%${q}%`]);
 
-    const formattedProducts = rows.map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: parseFloat(product.price),
-      oldPrice: null,
-      onSale: false,
-      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
-      stock: product.stock
-    }));
-
     res.json({
       success: true,
-      data: formattedProducts
+      data: rows.map(formatProduct)
     });
   } catch (error) {
     console.error('Error searching products:', error);
@@ -228,12 +149,10 @@ export const searchProducts = async (req, res) => {
   }
 };
 
-// Create a new product (admin only)
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category_id, image_url, stock } = req.body;
-    
-    // Validate required fields
+    const { name, description, price, category_id, stock } = req.body;
+
     if (!name || !description || !price || !category_id) {
       return res.status(400).json({
         success: false,
@@ -242,8 +161,8 @@ export const createProduct = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      'INSERT INTO products (name, description, price, category_id, image_url, stock) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, description, price, category_id, image_url || null, stock || 0]
+      'INSERT INTO products (name, description, price, category_id, stock) VALUES (?, ?, ?, ?, ?)',
+      [name, description, price, category_id, stock || 0]
     );
 
     res.status(201).json({
@@ -251,7 +170,11 @@ export const createProduct = async (req, res) => {
       message: 'Product created successfully',
       data: {
         id: result.insertId,
-        ...req.body
+        name,
+        description,
+        price,
+        category_id,
+        stock: stock || 0
       }
     });
   } catch (error) {
@@ -264,15 +187,14 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// Update a product (admin only)
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, category_id, image_url, stock } = req.body;
-    
+    const { name, description, price, category_id, stock } = req.body;
+
     const [result] = await pool.query(
-      'UPDATE products SET name = ?, description = ?, price  = ?, category_id = ?, image_url = ?, stock = ? WHERE id = ?',
-      [name, description, price, category_id, image_url, stock, id]
+      'UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock = ? WHERE product_id = ?',
+      [name, description, price, category_id, stock, id]
     );
 
     if (result.affectedRows === 0) {
@@ -296,12 +218,11 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-// Delete a product (admin only)
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
+
+    const [result] = await pool.query('DELETE FROM products WHERE product_id = ?', [id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
