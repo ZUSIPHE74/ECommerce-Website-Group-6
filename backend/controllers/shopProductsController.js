@@ -42,10 +42,33 @@ const baseGroupBy = `
 export const getAllProducts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      ${baseProductSelect}
-      ${baseGroupBy}
+      SELECT 
+        p.product_id,
+        p.name,
+        p.description,
+        p.price,
+        p.stock,
+        p.created_at,
+        c.category_id,
+        c.name as category_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.category_id
       ORDER BY p.created_at DESC
     `);
+
+    // Format the products with additional fields
+    const formattedProducts = rows.map(product => ({
+      id: product.product_id,
+      name: product.name,
+      description: product.description,
+      price: parseFloat(product.price),
+      oldPrice: null,
+      onSale: false,
+      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
+      rating: 0, // You'll need to implement reviews separately
+      reviews: 0,
+      stock: product.stock
+    }));
 
     res.json({
       success: true,
@@ -66,9 +89,18 @@ export const getProductById = async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await pool.query(`
-      ${baseProductSelect}
+      SELECT 
+        p.product_id,
+        p.name,
+        p.description,
+        p.price,
+        p.stock,
+        p.created_at,
+        c.category_id,
+        c.name as category_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.category_id
       WHERE p.product_id = ?
-      ${baseGroupBy}
     `, [id]);
 
     if (rows.length === 0) {
@@ -77,6 +109,20 @@ export const getProductById = async (req, res) => {
         message: 'Product not found'
       });
     }
+
+    const product = rows[0];
+    const formattedProduct = {
+      id: product.product_id,
+      name: product.name,
+      description: product.description,
+      price: parseFloat(product.price),
+      oldPrice: null,
+      onSale: false,
+      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
+      rating: 0,
+      reviews: 0,
+      stock: product.stock
+    };
 
     res.json({
       success: true,
@@ -97,11 +143,33 @@ export const getProductsByCategory = async (req, res) => {
     const { category } = req.params;
 
     const [rows] = await pool.query(`
-      ${baseProductSelect}
+      SELECT 
+        p.product_id,
+        p.name,
+        p.description,
+        p.price,
+        p.stock,
+        p.created_at,
+        c.category_id,
+        c.name as category_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.category_id
       WHERE LOWER(c.name) = LOWER(?)
-      ${baseGroupBy}
       ORDER BY p.created_at DESC
     `, [category]);
+
+    const formattedProducts = rows.map(product => ({
+      id: product.product_id,
+      name: product.name,
+      description: product.description,
+      price: parseFloat(product.price),
+      oldPrice: null,
+      onSale: false,
+      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
+      rating: 0,
+      reviews: 0,
+      stock: product.stock
+    }));
 
     res.json({
       success: true,
@@ -129,11 +197,33 @@ export const searchProducts = async (req, res) => {
     }
 
     const [rows] = await pool.query(`
-      ${baseProductSelect}
+      SELECT 
+        p.product_id,
+        p.name,
+        p.description,
+        p.price,
+        p.stock,
+        p.created_at,
+        c.category_id,
+        c.name as category_name
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.category_id
       WHERE p.name LIKE ? OR p.description LIKE ?
-      ${baseGroupBy}
       ORDER BY p.created_at DESC
     `, [`%${q}%`, `%${q}%`]);
+
+    const formattedProducts = rows.map(product => ({
+      id: product.product_id,
+      name: product.name,
+      description: product.description,
+      price: parseFloat(product.price),
+      oldPrice: null,
+      onSale: false,
+      category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
+      rating: 0,
+      reviews: 0,
+      stock: product.stock
+    }));
 
     res.json({
       success: true,
@@ -152,7 +242,8 @@ export const searchProducts = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     const { name, description, price, category_id, stock } = req.body;
-
+    
+    // Validate required fields
     if (!name || !description || !price || !category_id) {
       return res.status(400).json({
         success: false,
@@ -169,12 +260,8 @@ export const createProduct = async (req, res) => {
       success: true,
       message: 'Product created successfully',
       data: {
-        id: result.insertId,
-        name,
-        description,
-        price,
-        category_id,
-        stock: stock || 0
+        product_id: result.insertId,
+        ...req.body
       }
     });
   } catch (error) {
@@ -191,7 +278,7 @@ export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, price, category_id, stock } = req.body;
-
+    
     const [result] = await pool.query(
       'UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock = ? WHERE product_id = ?',
       [name, description, price, category_id, stock, id]
@@ -221,7 +308,7 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-
+    
     const [result] = await pool.query('DELETE FROM products WHERE product_id = ?', [id]);
 
     if (result.affectedRows === 0) {
@@ -240,6 +327,25 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting product',
+      error: error.message
+    });
+  }
+};
+
+// Get all categories
+export const getAllCategories = async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT category_id, name FROM categories ORDER BY name');
+    
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching categories',
       error: error.message
     });
   }
