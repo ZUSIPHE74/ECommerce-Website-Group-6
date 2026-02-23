@@ -10,15 +10,15 @@
       <article v-for="item in cart" :key="item.id" class="item">
         <div>
           <h3>{{ item.name }}</h3>
-          <p>${{ Number(item.price).toFixed(2) }} x {{ item.quantity }}</p>
+          <p>{{ formatMoney(item.price) }} x {{ item.quantity }}</p>
         </div>
-        <strong>${{ (Number(item.price) * Number(item.quantity)).toFixed(2) }}</strong>
+        <strong>{{ formatMoney(Number(item.price) * Number(item.quantity)) }}</strong>
       </article>
 
       <div class="summary">
         <!-- Totals -->
         <p>Items: {{ cartCount }}</p>
-        <p>Total: ${{ Number(cartTotal).toFixed(2) }}</p>
+        <p>Total: {{ formatMoney(Number(cartTotal)) }}</p>
 
         <!-- Checkout button -->
         <button 
@@ -37,6 +37,7 @@
 import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { formatMoney } from '../utils/currency'
 
 const props = defineProps({
   userId: {
@@ -63,6 +64,7 @@ onMounted(() => {
 function goToCheckout() {
   router.push('/checkout')
 }
+
 </script>
 
 <style scoped>

@@ -100,7 +100,7 @@ const goToShop = () => {
 }
 
 .hero-title {
-  font-size: 3rem;
+  font-size: 48px;
   letter-spacing: 6px;
   font-weight: 800;
   margin-bottom: 10px;
@@ -112,7 +112,7 @@ const goToShop = () => {
 }
 
 .hero-subtitle {
-  font-size: 1.1rem;
+  font-size: 17.6px;
   letter-spacing: 2px;
   margin-bottom: 40px;
   color: #cccccc;
@@ -158,14 +158,14 @@ const goToShop = () => {
 }
 
 .icon-glow {
-  font-size: 2rem;
+  font-size: 32px;
   color: #00ffff;
   margin-bottom: 20px;
   display: block;
 }
 
 .feature-card h2 {
-  font-size: 1rem;
+  font-size: 16px;
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-bottom: 15px;
@@ -174,7 +174,7 @@ const goToShop = () => {
 .feature-card p {
   color: #888;
   line-height: 1.6;
-  font-size: 0.9rem;
+  font-size: 14.4px;
 }
 
 /* Slider Indicators */

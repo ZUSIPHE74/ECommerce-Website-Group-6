@@ -8,7 +8,6 @@
         <RouterLink to="/about">About</RouterLink>
         <RouterLink to="/shop">Shop</RouterLink>
         <RouterLink to="/cart">Cart</RouterLink>
-        <RouterLink to="/checkout">Checkout</RouterLink>
         <RouterLink v-if="!isLoggedIn" to="/login" class="auth-link">Login</RouterLink>
         <RouterLink v-if="isLoggedIn" to="/account/profile" class="auth-link">Your Account</RouterLink>
 
@@ -78,7 +77,7 @@ const logout = () => {
   letter-spacing: 4px;
   font-weight: 800;
   color: #ffffff;
-  font-size: 1.4rem;
+  font-size: 22.4px;
 }
 
 .logo span {
@@ -91,7 +90,7 @@ nav a {
   color: #ffffff;
   margin-left: 25px;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 14.4px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 8px 16px;
@@ -128,7 +127,7 @@ nav a.router-link-exact-active {
   border: 1px solid #ef4444;
   color: #ef4444;
   text-transform: uppercase;
-  font-size: 0.8rem;
+  font-size: 12.8px;
   cursor: pointer;
   border-radius: 4px;
   transition: 0.3s;
