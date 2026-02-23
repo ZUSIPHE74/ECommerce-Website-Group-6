@@ -9,15 +9,15 @@
         <!-- Display cart items in checkout -->
          <div v-for="items in cart" :key="items.id" class="checkout-item">
             <p>{{ items.name }} x {{ items.quantity }}</p>
-            <p>${{ (Number(items.price) * Number(items.quantity)).toFixed(2) }}</p>
+            <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
          </div>
 
         <!-- Total summary -->
         <div class="checkout-summary">
-            <p>Subtotal: ${{ Number(cartTotal).toFixed(2) }}</p>
-            <p>Shipping: ${{ shippingCost.toFixed(2) }}</p>
-            <p>Import Charges: ${{ customsCharges.toFixed(2) }}</p>
-            <p><strong>Total: ${{ totalWithShipping.toFixed(2) }}</strong></p>
+            <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
+            <p>Shipping: {{ formatMoney(shippingCost) }}</p>
+            <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
+            <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
         </div>
 
             <!-- Shipping info -->
@@ -50,6 +50,7 @@
 import router from '@/router'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useStore } from 'vuex' 
+import { formatMoney } from '../utils/currency'
 
 const store = useStore()
 const userId = Number(localStorage.getItem('userId')) || 1
@@ -94,8 +95,8 @@ function placeOrder() {
 <style scoped>
 .checkout {
   max-width: 700px;
-  margin: 2rem auto;
-  padding: 1rem;
+  margin: 32px auto;
+  padding: 16px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background-color: #f9fafb;
@@ -103,7 +104,7 @@ function placeOrder() {
 
 .checkout h2 {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .checkout-item {
@@ -153,3 +154,4 @@ function placeOrder() {
   font-style: italic;
 }
 </style>
+

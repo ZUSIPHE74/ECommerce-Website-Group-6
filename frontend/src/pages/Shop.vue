@@ -45,8 +45,8 @@
             
             <div class="product-price-section">
               <div class="price-container">
-                <span v-if="product.oldPrice" class="old-price">R{{ formatPrice(product.oldPrice) }}</span>
-                <span class="current-price" :class="{ 'on-sale': product.onSale }">R{{ formatPrice(product.price) }}</span>
+                <span v-if="product.oldPrice" class="old-price">{{ formatMoney(product.oldPrice) }}</span>
+                <span class="current-price" :class="{ 'on-sale': product.onSale }">{{ formatMoney(product.price) }}</span>
               </div>
               
               <div class="rating">
@@ -77,6 +77,7 @@
 
 <script>
 import axios from 'axios';
+import { formatMoney } from '../utils/currency';
 
 export default {
   name: "Shop",
@@ -160,8 +161,8 @@ export default {
       return description;
     },
     
-    formatPrice(price) {
-      return parseFloat(price).toFixed(2);
+    formatMoney(price) {
+      return formatMoney(price);
     },
     
     getStarRating(rating) {
@@ -174,32 +175,14 @@ export default {
       this.isAddingToCart = true;
       
       try {
-        // Get existing cart from localStorage or initialize empty array
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        
-        // Check if product already exists in cart
-        const existingProduct = cart.find(item => item.id === product.id);
-        
-        if (existingProduct) {
-          if (existingProduct.quantity < product.stock) {
-            existingProduct.quantity += 1;
-          } else {
-            this.showToastMessage('Cannot add more than available stock', 'error');
-            return;
-          }
-        } else {
-          cart.push({
-            ...product,
-            quantity: 1
-          });
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('cart', JSON.stringify(cart));
+        const userId = Number(localStorage.getItem('userId')) || 1;
+        await this.$store.dispatch('addToCart', {
+          user_Id: userId,
+          product_Id: product.id
+        });
         
         this.showToastMessage('Product added to cart!', 'success');
         
-        // Emit event for parent component
         this.$emit('cart-updated');
       } catch (err) {
         console.error('Error adding to cart:', err);
@@ -251,7 +234,7 @@ export default {
 }
 
 .page-title {
-  font-size: 2.5rem;
+  font-size: 40px;
   color: #fff;
   margin-bottom: 40px;
   text-align: center;
@@ -279,7 +262,7 @@ export default {
 .filter-section label, .sort-section label {
   color: #00ffff; /* Signature Cyan for labels */
   font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
+  font-size: 12.8px;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -291,7 +274,7 @@ export default {
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3); /* Muted white frame */
   padding: 10px 35px 10px 15px;
-  font-size: 0.9rem;
+  font-size: 14.4px;
   font-family: 'Inter', sans-serif;
   letter-spacing: 1px;
   cursor: pointer;
@@ -386,19 +369,19 @@ export default {
 }
 
 .product-title {
-  font-size: 1.2rem;
+  font-size: 19.2px;
   margin-bottom: 10px;
   color: #fff;
 }
 
 .product-description {
   color: #888;
-  font-size: 0.9rem;
+  font-size: 14.4px;
   margin-bottom: 20px;
 }
 
 .current-price {
-  font-size: 1.3rem;
+  font-size: 20.8px;
   font-weight: bold;
   color: white;
 }
