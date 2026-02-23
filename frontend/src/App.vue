@@ -8,7 +8,6 @@
         <RouterLink to="/about">About</RouterLink>
         <RouterLink to="/shop">Shop</RouterLink>
         <RouterLink to="/cart">Cart</RouterLink>
-        <RouterLink to="/checkout">Checkout</RouterLink>
         <RouterLink v-if="!isLoggedIn" to="/login" class="auth-link">Login</RouterLink>
         <RouterLink v-if="isLoggedIn" to="/account/profile" class="auth-link">Your Account</RouterLink>
 
