@@ -5,36 +5,30 @@ export const getAllProducts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT 
-        p.id,
+        p.product_id,
         p.name,
         p.description,
         p.price,
-        p.image_url,
         p.stock,
         p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
+        c.category_id,
+        c.name as category_name
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
-      GROUP BY p.id, c.id, c.name
+      LEFT JOIN categories c ON p.category_id = c.category_id
       ORDER BY p.created_at DESC
     `);
 
     // Format the products with additional fields
     const formattedProducts = rows.map(product => ({
-      id: product.id,
+      id: product.product_id,
       name: product.name,
       description: product.description,
       price: parseFloat(product.price),
-      oldPrice: null, // You can add logic for old prices if needed
-      onSale: false, // You can add logic for sales if needed
+      oldPrice: null,
+      onSale: false,
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
+      rating: 0, // You'll need to implement reviews separately
+      reviews: 0,
       stock: product.stock
     }));
 
@@ -59,22 +53,17 @@ export const getProductById = async (req, res) => {
     
     const [rows] = await pool.query(`
       SELECT 
-        p.id,
+        p.product_id,
         p.name,
         p.description,
         p.price,
-        p.image_url,
         p.stock,
         p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
+        c.category_id,
+        c.name as category_name
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
-      WHERE p.id = ?
-      GROUP BY p.id, c.id, c.name
+      LEFT JOIN categories c ON p.category_id = c.category_id
+      WHERE p.product_id = ?
     `, [id]);
 
     if (rows.length === 0) {
@@ -86,16 +75,15 @@ export const getProductById = async (req, res) => {
 
     const product = rows[0];
     const formattedProduct = {
-      id: product.id,
+      id: product.product_id,
       name: product.name,
       description: product.description,
       price: parseFloat(product.price),
       oldPrice: null,
       onSale: false,
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
+      rating: 0,
+      reviews: 0,
       stock: product.stock
     };
 
@@ -120,36 +108,30 @@ export const getProductsByCategory = async (req, res) => {
     
     const [rows] = await pool.query(`
       SELECT 
-        p.id,
+        p.product_id,
         p.name,
         p.description,
         p.price,
-        p.image_url,
         p.stock,
         p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
+        c.category_id,
+        c.name as category_name
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
+      LEFT JOIN categories c ON p.category_id = c.category_id
       WHERE LOWER(c.name) = LOWER(?)
-      GROUP BY p.id, c.id, c.name
       ORDER BY p.created_at DESC
     `, [category]);
 
     const formattedProducts = rows.map(product => ({
-      id: product.id,
+      id: product.product_id,
       name: product.name,
       description: product.description,
       price: parseFloat(product.price),
       oldPrice: null,
       onSale: false,
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
+      rating: 0,
+      reviews: 0,
       stock: product.stock
     }));
 
@@ -181,36 +163,30 @@ export const searchProducts = async (req, res) => {
 
     const [rows] = await pool.query(`
       SELECT 
-        p.id,
+        p.product_id,
         p.name,
         p.description,
         p.price,
-        p.image_url,
         p.stock,
         p.created_at,
-        c.id as category_id,
-        c.name as category_name,
-        COALESCE(AVG(r.rating), 0) as average_rating,
-        COUNT(DISTINCT r.id) as review_count
+        c.category_id,
+        c.name as category_name
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN reviews r ON p.id = r.product_id
+      LEFT JOIN categories c ON p.category_id = c.category_id
       WHERE p.name LIKE ? OR p.description LIKE ?
-      GROUP BY p.id, c.id, c.name
       ORDER BY p.created_at DESC
     `, [`%${q}%`, `%${q}%`]);
 
     const formattedProducts = rows.map(product => ({
-      id: product.id,
+      id: product.product_id,
       name: product.name,
       description: product.description,
       price: parseFloat(product.price),
       oldPrice: null,
       onSale: false,
       category: product.category_name ? product.category_name.toLowerCase() : 'uncategorized',
-      rating: Math.round(product.average_rating) || 0,
-      reviews: product.review_count || 0,
-      image: product.image_url || '',
+      rating: 0,
+      reviews: 0,
       stock: product.stock
     }));
 
@@ -231,7 +207,7 @@ export const searchProducts = async (req, res) => {
 // Create a new product (admin only)
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category_id, image_url, stock } = req.body;
+    const { name, description, price, category_id, stock } = req.body;
     
     // Validate required fields
     if (!name || !description || !price || !category_id) {
@@ -242,15 +218,15 @@ export const createProduct = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      'INSERT INTO products (name, description, price, category_id, image_url, stock) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, description, price, category_id, image_url || null, stock || 0]
+      'INSERT INTO products (name, description, price, category_id, stock) VALUES (?, ?, ?, ?, ?)',
+      [name, description, price, category_id, stock || 0]
     );
 
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
       data: {
-        id: result.insertId,
+        product_id: result.insertId,
         ...req.body
       }
     });
@@ -268,11 +244,11 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, category_id, image_url, stock } = req.body;
+    const { name, description, price, category_id, stock } = req.body;
     
     const [result] = await pool.query(
-      'UPDATE products SET name = ?, description = ?, price  = ?, category_id = ?, image_url = ?, stock = ? WHERE id = ?',
-      [name, description, price, category_id, image_url, stock, id]
+      'UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock = ? WHERE product_id = ?',
+      [name, description, price, category_id, stock, id]
     );
 
     if (result.affectedRows === 0) {
@@ -301,7 +277,7 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
+    const [result] = await pool.query('DELETE FROM products WHERE product_id = ?', [id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -319,6 +295,25 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting product',
+      error: error.message
+    });
+  }
+};
+
+// Get all categories
+export const getAllCategories = async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT category_id, name FROM categories ORDER BY name');
+    
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching categories',
       error: error.message
     });
   }
