@@ -18,6 +18,9 @@ app.get('/', (req, res) => {
   res.send('Hello Group 6!!!');
 });
 
+// =================
+// PRODUCTS
+// =================
 app.get('/products', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM products');
@@ -28,13 +31,18 @@ app.get('/products', async (req, res) => {
   }
 });
 
+// =================
+// CART
+// =================
+
+// Get cart items for a specific user
 app.get('/cart/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const [rows] = await pool.query(
-      `SELECT c.id, c.quantity, p.name, p.price
+      `SELECT c.id, c.product_id, c.quantity, p.name, p.price_usd AS price
        FROM cart_items c
-       JOIN products p ON c.product_id = p.product_id
+       JOIN products p ON c.product_id = p.id
        WHERE c.user_id = ?`,
       [userId]
     );
@@ -45,6 +53,7 @@ app.get('/cart/:userId', async (req, res) => {
   }
 });
 
+// Add an item to cart (or increase quantity if it already exists)
 app.post('/cart', async (req, res) => {
   try {
     const { user_Id, product_Id } = req.body;
@@ -72,6 +81,7 @@ app.post('/cart', async (req, res) => {
   }
 });
 
+// Update cart item quantity
 app.patch('/cart', async (req, res) => {
   try {
     const { user_Id, product_Id, quantity } = req.body;
@@ -86,6 +96,7 @@ app.patch('/cart', async (req, res) => {
   }
 });
 
+// Remove an item from cart
 app.delete('/cart', async (req, res) => {
   try {
     const { user_Id, product_Id } = req.body;
@@ -100,6 +111,9 @@ app.delete('/cart', async (req, res) => {
   }
 });
 
+// =================
+// SERVER
+// =================
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

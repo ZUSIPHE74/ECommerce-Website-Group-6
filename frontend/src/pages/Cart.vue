@@ -12,7 +12,19 @@
           <h3>{{ item.name }}</h3>
           <p>{{ formatMoney(item.price) }} x {{ item.quantity }}</p>
         </div>
-        <strong>{{ formatMoney(Number(item.price) * Number(item.quantity)) }}</strong>
+
+        <div class="item-actions">
+          <strong>
+            {{ formatMoney(Number(item.price) * Number(item.quantity)) }}
+          </strong>
+
+          <button 
+            class="remove-btn"
+            @click="removeItem(item.product_id)"
+          >
+            Remove
+          </button>
+        </div>
       </article>
 
       <div class="summary">
@@ -54,17 +66,26 @@ const cart = computed(() => store.state.Cart || [])
 const cartCount = computed(() => store.getters.cartCount || 0)
 const cartTotal = computed(() => store.getters.cartTotal || 0)
 
-// Fetch cart for the user
+// Fetch cart on load
 onMounted(() => {
   const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
   store.dispatch('fetchCart', resolvedUserId)
 })
 
-// Go to checkout page
+// Remove item from cart
+function removeItem(productId) {
+  const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
+
+  store.dispatch('removeFromCart', {
+    user_Id: resolvedUserId,
+    product_Id: productId
+  })
+}
+
+// Go to checkout
 function goToCheckout() {
   router.push('/checkout')
 }
-
 </script>
 
 <style scoped>
@@ -92,6 +113,28 @@ function goToCheckout() {
 .item p {
   margin: 4px 0 0;
   color: #475569;
+}
+
+.item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.remove-btn {
+  background: transparent;
+  border: 1px solid #dc2626;
+  color: #dc2626;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.remove-btn:hover {
+  background: #dc2626;
+  color: white;
 }
 
 .summary {

@@ -12,14 +12,6 @@
             <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
          </div>
 
-        <!-- Total summary -->
-        <div class="checkout-summary">
-            <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
-            <p>Shipping: {{ formatMoney(shippingCost) }}</p>
-            <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
-            <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
-        </div>
-
             <!-- Shipping info -->
              <div class="checkout-form">
                 <h3>Shipping Info</h3>
@@ -31,12 +23,28 @@
 
             <!-- Payment method -->
              <h3>Payment Method</h3>
-             <select v-model="paymentMethod" required>
-                <option value="">Select Payment</option>
-                <option value="card">Credit/Debit Card</option>
-                <option value="paypal">PayPal</option>
-                <option value="eft">EFT</option>
-             </select>
+             <div class="payment-options">
+                <label class="payment-option">
+                  <input type="radio" v-model="paymentMethod" value="card" />
+                  <span>Credit/Debit Card</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" v-model="paymentMethod" value="paypal" />
+                  <span>PayPal</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" v-model="paymentMethod" value="eft" />
+                  <span>EFT</span>
+                </label>
+             </div>
+
+             <!-- Total summary -->
+             <div class="checkout-summary payment-summary">
+                <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
+                <p>Shipping: {{ formatMoney(shippingCost) }}</p>
+                <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
+                <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
+             </div>
 
              <!-- Place Order-->
               <button @click="placeOrder" class="place-order-btn">
@@ -84,58 +92,133 @@ function placeOrder() {
         return alert('Please fill in all shipping information.')
     if (!paymentMethod.value) return alert('Please select a payment method.')
 
-    alert('Order placed successfully!')
+    const checkoutPayload = {
+      shipping: { ...shipping },
+      paymentMethod: paymentMethod.value,
+      totals: {
+        subtotal: Number(cartTotal.value),
+        shipping: Number(shippingCost.value),
+        importCharges: Number(customsCharges.value),
+        total: Number(totalWithShipping.value)
+      }
+    }
 
-    // Clear local checkout state and redirect.
-    store.dispatch('clearCart')
-    router.push('/order-confirmation')
+    sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutPayload))
+    router.push('/payment')
 }
 </script>
 
 <style scoped>
 .checkout {
-  max-width: 700px;
-  margin: 32px auto;
-  padding: 16px;
-  border: 1px solid #e2e8f0;
+  max-width: 760px;
+  margin: 20px auto;
+  padding: 18px;
+  border: 1px solid #00ffff;
   border-radius: 8px;
-  background-color: #f9fafb;
+  background-color: #121212;
+  color: #f5f5f5;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.08);
 }
 
 .checkout h2 {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  color: #ffffff;
 }
 
 .checkout-item {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid #2a2a2a;
 }
 
 .checkout-summary {
-  margin-top: 12px;
+  margin-top: 8px;
   font-weight: 600;
   text-align: right;
 }
 
 .checkout-form {
-  margin-top: 16px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
 }
 
+.checkout-form h3,
+.checkout > div > h3 {
+  margin: 10px 0 8px;
+  color: #ffffff;
+}
+
 .checkout-form input,
-.checkout-form select {
+.checkout select {
   margin-bottom: 10px;
-  padding: 8px;
+  padding: 10px;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #3b3b3b;
+  background: #1a1a1a;
+  color: #f5f5f5;
+}
+
+.checkout-form input:focus,
+.checkout select:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
+}
+
+.checkout select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #00ffff 50%),
+    linear-gradient(135deg, #00ffff 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+.checkout select option {
+  background: #121212;
+  color: #f5f5f5;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  cursor: pointer;
+}
+
+.payment-option:hover {
+  border-color: #00ffff;
+}
+
+.payment-option input {
+  accent-color: #00ffff;
+}
+
+.payment-summary {
+  margin-top: 6px;
+  margin-bottom: 4px;
 }
 
 .place-order-btn {
-  margin-top: 16px;
+  display: block;
+  margin: 20px auto 0;
   padding: 10px 16px;
   background-color: #1e40af;
   color: white;
@@ -150,8 +233,7 @@ function placeOrder() {
 
 .empty {
   text-align: center;
-  color: #64748b;
+  color: #94a3b8;
   font-style: italic;
 }
 </style>
-

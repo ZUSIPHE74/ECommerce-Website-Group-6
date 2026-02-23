@@ -1,10 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 import Home from '../pages/Home.vue'
 import About from '../pages/About.vue'
 import Shop from '../pages/Shop.vue'
 import Cart from '../pages/Cart.vue'
 import Checkout from '../pages/Checkout.vue'
+import Payment from '../pages/Payment.vue'
+import OrderSuccess from '../pages/OrderSuccess.vue'
 import Login from '../pages/Login.vue'
 import Register from '../pages/Register.vue'
 import ForgotPassword from '../pages/ForgotPassword.vue'
@@ -17,6 +19,8 @@ const routes = [
   { path: '/shop', component: Shop },
   { path: '/cart', component: Cart },
   { path: '/checkout', component: Checkout },
+  { path: '/payment', component: Payment },
+  { path: '/order-success', component: OrderSuccess },
 
   { path: '/login', component: Login },
   { path: '/register', component: Register },
@@ -29,7 +33,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 
