@@ -1,33 +1,55 @@
 <template>
-  <div class="profile-container" v-if="user">
-    <div class="profile-header">
-      <div class="avatar-placeholder">{{ user.full_name.charAt(0) }}</div>
-      <h1>{{ user.full_name }}</h1>
-      <p class="email">{{ user.email }}</p>
-      <button @click="logout" class="btn btn-outline" style="margin-top: 1rem;">Sign Out</button>
-    </div>
+  <div class="profile-page">
+    <div class="profile-container" v-if="user">
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="avatar-container">
+            <div class="avatar-glow"></div>
+            <div class="avatar">{{ user.full_name.charAt(0) }}</div>
+          </div>
+          <div class="header-info">
+            <h1>Profile of a Person</h1>
+            <p class="role-tag">{{ user.role?.toUpperCase() || 'USER' }}</p>
+          </div>
+        </div>
 
-    <div class="dashboard-grid">
-      <div class="card">
-        <h3>My Orders</h3>
-        <p>No active orders</p>
-      </div>
-      <div class="card">
-        <h3>Wishlist</h3>
-        <p>Your wishlist is empty</p>
-      </div>
-      <div class="card">
-        <h3>Address Book</h3>
-        <p>Manage your shipping addresses</p>
-      </div>
-      <div class="card">
-        <h3>Account Settings</h3>
-        <p>Update password and details</p>
+        <div class="profile-grid">
+          <div class="info-group">
+            <label>Full Name</label>
+            <p>{{ user.full_name }}</p>
+          </div>
+          <div class="info-group">
+            <label>Email Address</label>
+            <p>{{ user.email }}</p>
+          </div>
+          <div class="info-group">
+            <label>Gender</label>
+            <p>{{ user.gender || 'Not specified' }}</p>
+          </div>
+          <div class="info-group">
+            <label>Country</label>
+            <p>{{ user.country_name || 'Not specified' }}</p>
+          </div>
+          <div class="info-group">
+            <label>Currency Preference</label>
+            <p>{{ user.currency_code || 'USD' }}</p>
+          </div>
+          <div class="info-group">
+            <label>Member Since</label>
+            <p>{{ formatDate(user.created_at) }}</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <router-link to="/dashboard" class="btn-primary">Edit Development Details</router-link>
+          <button @click="logout" class="btn-secondary">Terminate Session</button>
+        </div>
       </div>
     </div>
-  </div>
-  <div v-else class="loading">
-    Loading profile...
+    <div v-else class="loading-state">
+      <div class="loader"></div>
+      <p>Deciphering Persona...</p>
+    </div>
   </div>
 </template>
 
@@ -63,6 +85,14 @@ export default {
     }
   },
   methods: {
+    formatDate(dateStr) {
+      if (!dateStr) return 'N/A';
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    },
     logout() {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -73,67 +103,195 @@ export default {
 </script>
 
 <style scoped>
+.profile-page {
+  min-height: 90vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #121212;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
 .profile-container {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 0 20px;
+  width: 100%;
+  max-width: 800px;
+  padding: 40px 20px;
+}
+
+.profile-card {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 50px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
 }
 
 .profile-header {
-  text-align: center;
-  margin-bottom: 60px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 40px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 50px;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 30px;
 }
 
-.avatar-placeholder {
+.avatar-container {
+  position: relative;
   width: 100px;
   height: 100px;
-  background-color: #000;
-  color: #fff;
+}
+
+.avatar {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #2a2a2a;
+  color: #00ffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  font-weight: bold;
-  margin: 0 auto 20px;
+  font-size: 48px;
+  font-weight: 800;
+  border: 2px solid #00ffff;
+  z-index: 2;
 }
 
-.email {
-  color: #666;
+.avatar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #00ffff;
+  filter: blur(20px);
+  opacity: 0.2;
+  border-radius: 50%;
 }
 
-.dashboard-grid {
+.header-info h1 {
+  font-size: 35.2px;
+  letter-spacing: -1px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.role-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(0, 255, 255, 0.1);
+  color: #00ffff;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 10px;
+}
+
+.profile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+.info-group label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.info-group p {
+  font-size: 17.6px;
+  color: #f5f5f5;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
   gap: 20px;
 }
 
-.card {
-  border: 1px solid #eee;
-  padding: 30px;
-  transition: 0.3s;
+.btn-primary {
+  flex: 1;
+  background: #00ffff;
+  color: #121212;
+  padding: 15px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  border: none;
   cursor: pointer;
 }
 
-.card:hover {
-  border-color: #000;
-  box-shadow: 5px 5px 0px #000;
+.btn-primary:hover {
+  background: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
-.card h3 {
-  margin-bottom: 10px;
-  font-size: 1.1rem;
+.btn-secondary {
+  padding: 15px 30px;
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.card p {
-  font-size: 0.9rem;
-  color: #666;
+.btn-secondary:hover {
+  background: #ef4444;
+  color: white;
 }
 
-.loading {
+.loading-state {
   text-align: center;
-  padding: 50px;
+}
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #2a2a2a;
+  border-radius: 50%;
+  border-top-color: #00ffff;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  .actions {
+    flex-direction: column;
+  }
 }
 </style>
+

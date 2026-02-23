@@ -33,7 +33,10 @@
 
         <div class="form-group">
           <label>Country</label>
-          <p v-if="countriesError" style="color: red; font-size: 0.8rem;">To fix: Refresh page or check server.</p>
+          <div v-if="countriesError" class="country-error">
+            Countries unavailable.
+            <button type="button" class="retry-btn" @click="loadCountries">Retry</button>
+          </div>
           <select v-model="country_id" @change="onCountryChange" required>
             <option value="" disabled selected>Select your country</option>
             <option v-for="country in countries" :key="country.id" :value="country.id">
@@ -55,6 +58,28 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label>Security Question</label>
+          <select v-model="security_question" required>
+            <option value="" disabled selected>Select a question</option>
+            <option value="childhood_street">What was the name of the street you grew up on?</option>
+            <option value="first_pet">What was the name of your first pet?</option>
+            <option value="first_boss">What was the first name of your first boss?</option>
+            <option value="family_birth_city">In what city was your oldest sibling born?</option>
+            <option value="first_car_model">What was the model of your first car?</option>
+            <option value="favorite_teacher">What was the last name of your favorite teacher?</option>
+            <option value="childhood_best_friend">What was the first name of your childhood best friend?</option>
+            <option value="first_job_title">What was your first job title?</option>
+            <option value="first_concert">What was the first concert you attended?</option>
+          </select>
+          <p class="helper-text">For account recovery.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Security Answer (keep it private)</label>
+          <input type="text" v-model="security_answer" required placeholder="Type the exact answer" />
+        </div>
+
         <button type="submit" class="btn block">Sign Up</button>
       </form>
 
@@ -68,6 +93,7 @@
 </template>
 
 <script>
+import countriesFallback from '../utils/countries'
 export default {
   data() {
     return {
@@ -78,34 +104,45 @@ export default {
       currency_code: '',
       gender: '',
       referral_source: '',
+      security_question: '',
+      security_answer: '',
       countries: [],
       error: '',
       countriesError: false
     }
   },
   async mounted() {
-    try {
-      const response = await fetch('http://localhost:5050/api/countries');
-      if (response.ok) {
-        this.countries = await response.json();
-      } else {
-        this.countriesError = true;
-      }
-    } catch (err) {
-      console.error('Failed to load countries', err);
-      this.countriesError = true;
-    }
+    await this.loadCountries();
   },
   methods: {
+    async loadCountries() {
+      this.countriesError = false;
+      try {
+        const response = await fetch('/api/countries');
+        if (!response.ok) {
+          throw new Error(`Countries request failed: ${response.status}`);
+        }
+
+        const countries = await response.json();
+        this.countries = Array.isArray(countries) ? countries : [];
+        if (this.countries.length === 0) {
+          throw new Error('Countries response is empty');
+        }
+        this.countries.sort((a, b) => a.country_name.localeCompare(b.country_name));
+      } catch (err) {
+        this.countries = [...countriesFallback].sort((a, b) => a.country_name.localeCompare(b.country_name));
+        this.countriesError = this.countries.length === 0;
+      }
+    },
     onCountryChange() {
-      const selectedCountry = this.countries.find(c => c.id === this.country_id);
+      const selectedCountry = this.countries.find(c => c.id == this.country_id);
       if (selectedCountry) {
         this.currency_code = selectedCountry.currency_code;
       }
     },
     async handleRegister() {
       try {
-        const response = await fetch('http://localhost:5050/api/register', {
+        const response = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -115,14 +152,29 @@ export default {
             country_id: this.country_id,
             currency_code: this.currency_code,
             gender: this.gender,
-            referral_source: this.referral_source
+            referral_source: this.referral_source,
+            security_question: this.security_question,
+            security_answer: this.security_answer
           })
         });
 
-        const data = await response.json();
+        let data = null;
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          const text = await response.text();
+          if (text) {
+            data = { message: text };
+          }
+        }
 
         if (!response.ok) {
-          throw new Error(data.message || 'Registration failed');
+          throw new Error(data?.message || 'Registration failed');
+        }
+
+        if (!data?.token || !data?.user) {
+          throw new Error('Registration succeeded but response was incomplete.');
         }
 
         localStorage.setItem('token', data.token);
@@ -130,7 +182,7 @@ export default {
 
         this.$router.push('/profile');
       } catch (err) {
-        this.error = err.message;
+        this.error = err?.message || 'Unable to reach server. Please try again.';
       }
     }
   }
@@ -143,67 +195,145 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 80vh;
-  background-color: var(--background-color);
+  background: radial-gradient(circle at 15% 20%, rgba(0, 255, 255, 0.12), rgba(0, 0, 0, 0) 45%), #2b2b2b;
   padding: 20px;
 }
 
 .auth-box {
   width: 100%;
   max-width: 450px;
-  padding: 40px;
-  border: 1px solid #000;
-  background: #fff;
-  box-shadow: 10px 10px 0px #000;
+  padding: 40px 24px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  color: #e6e6e6;
 }
 
 h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: 32px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: -1px;
+  color: #f5f5f5;
+  text-align: center;
 }
 
 .subtitle {
-  color: #666;
-  margin-bottom: 2rem;
+  color: #b7b7b7;
+  margin-bottom: 32px;
+  text-align: center;
 }
 
 .block {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: #00ffff;
+  color: #0b0b0b;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  height: 52px;
+  font-size: 16px;
+  letter-spacing: 0.3px;
 }
 
 .switch-auth {
-  margin-top: 1.5rem;
+  margin-top: 24px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 14.4px;
 }
 
 .switch-auth a {
   font-weight: bold;
-  text-decoration: underline;
+  text-decoration: none;
+  color: #00ffff;
 }
 
 .error-msg {
-  color: red;
-  margin-top: 1rem;
+  color: #ff6b6b;
+  margin-top: 16px;
   text-align: center;
+}
+
+.helper-text {
+  color: #b7b7b7;
+  font-size: 13.6px;
+  margin-top: 5.6px;
 }
 
 select {
   width: 100%;
-  padding: 12px;
+  height: 54px;
+  padding: 16px 16px;
   margin-bottom: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
+  border: 2px solid #00ffff;
+  border-radius: 999px;
+  font-size: 16px;
   transition: border-color 0.3s;
-  background-color: #fff;
+  background-color: transparent;
+  color: #e6e6e6;
+  box-sizing: border-box;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2300ffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+
+select option {
+  background-color: #2b2b2b;
+  color: #e6e6e6;
+}
+
+input {
+  width: 100%;
+  height: 54px;
+  padding: 16px 16px;
+  margin-bottom: 16px;
+  border: 2px solid #00ffff;
+  border-radius: 999px;
+  font-size: 16px;
+  background-color: transparent;
+  color: #e6e6e6;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #a9a9a9;
+}
+
+label {
+  display: block;
+  color: #e6e6e6;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.country-error {
+  color: #ff6b6b;
+  font-size: 12.8px;
+  margin: 4px 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.retry-btn {
+  border: none;
+  background: transparent;
+  color: #00ffff;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12.8px;
+  line-height: 1;
+  margin: 0;
 }
 
 select:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: #00ffff;
 }
 
 .readonly-input {
@@ -213,3 +343,4 @@ select:focus {
   cursor: not-allowed;
 }
 </style>
+
