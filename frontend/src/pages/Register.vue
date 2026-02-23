@@ -94,6 +94,7 @@
 
 <script>
 import countriesFallback from '../utils/countries'
+import { postWithFallback } from '../utils/apiRequest'
 export default {
   data() {
     return {
@@ -142,36 +143,24 @@ export default {
     },
     async handleRegister() {
       try {
-        const response = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            full_name: this.full_name, 
-            email: this.email, 
-            password: this.password,
-            country_id: this.country_id,
-            currency_code: this.currency_code,
-            gender: this.gender,
-            referral_source: this.referral_source,
-            security_question: this.security_question,
-            security_answer: this.security_answer
-          })
+        this.error = '';
+        if (!this.country_id) {
+          this.error = 'Please select your country.';
+          return;
+        }
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        const data = await postWithFallback('/api/auth/register', {
+          full_name: this.full_name,
+          email: this.email,
+          password: this.password,
+          country_id: this.country_id ? Number(this.country_id) : null,
+          currency_code: this.currency_code,
+          gender: this.gender,
+          referral_source: this.referral_source,
+          security_question: this.security_question,
+          security_answer: this.security_answer
         });
-
-        let data = null;
-        const contentType = response.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          const text = await response.text();
-          if (text) {
-            data = { message: text };
-          }
-        }
-
-        if (!response.ok) {
-          throw new Error(data?.message || 'Registration failed');
-        }
 
         if (!data?.token || !data?.user) {
           throw new Error('Registration succeeded but response was incomplete.');
@@ -179,10 +168,13 @@ export default {
 
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        if (data?.user?.currency_code) {
+          localStorage.setItem('currency_code', data.user.currency_code);
+        }
 
-        this.$router.push('/profile');
+        this.$router.push('/account/profile');
       } catch (err) {
-        this.error = err?.message || 'Unable to reach server. Please try again.';
+        this.error = err?.message ? `Registration failed (${err.message})` : 'Unable to reach server. Please try again.';
       }
     }
   }

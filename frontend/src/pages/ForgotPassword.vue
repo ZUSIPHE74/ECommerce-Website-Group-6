@@ -6,6 +6,11 @@
       
       <form @submit.prevent="handleVerify">
         <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" v-model="email" required placeholder="Enter your account email" />
+        </div>
+
+        <div class="form-group">
           <label>Security Question</label>
           <select v-model="security_question" required>
             <option value="" disabled>Select your question</option>
@@ -54,9 +59,12 @@
 </template>
 
 <script>
+import { postWithFallback } from '../utils/apiRequest'
+
 export default {
   data() {
     return {
+      email: '',
       security_question: '',
       security_answer: '',
       new_password: '',
@@ -71,30 +79,11 @@ export default {
       try {
         this.message = '';
         this.error = '';
-
-        const response = await fetch('/api/verify-security-answer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            security_question: this.security_question,
-            security_answer: this.security_answer
-          })
+        const data = await postWithFallback('/api/verify-security-answer', {
+          email: this.email,
+          security_question: this.security_question,
+          security_answer: this.security_answer
         });
-
-        let data = null;
-        const contentType = response.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          const text = await response.text();
-          if (text) {
-            data = { message: text };
-          }
-        }
-
-        if (!response.ok) {
-          throw new Error(data?.message || 'Failed to verify answer');
-        }
 
         this.verified = true;
         this.message = data?.message || 'Answer verified. You can reset your password now.';
@@ -111,31 +100,12 @@ export default {
           this.error = 'Passwords do not match.';
           return;
         }
-
-        const response = await fetch('/api/reset-password-security', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            security_question: this.security_question,
-            security_answer: this.security_answer,
-            new_password: this.new_password
-          })
+        const data = await postWithFallback('/api/reset-password-security', {
+          email: this.email,
+          security_question: this.security_question,
+          security_answer: this.security_answer,
+          new_password: this.new_password
         });
-
-        let data = null;
-        const contentType = response.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          const text = await response.text();
-          if (text) {
-            data = { message: text };
-          }
-        }
-
-        if (!response.ok) {
-          throw new Error(data?.message || 'Failed to reset password');
-        }
 
         this.message = data?.message || 'Password reset successfully.';
       } catch (err) {

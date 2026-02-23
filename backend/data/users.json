@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "full_name": "Megan Stallion",
+    "email": "megan.stallion@gmail.com",
+    "password": "$2b$10$fFw.GULpmpYCxiT9urpXjuYrd1WSrDpG3d.xTPHeyqwyS1RxTQ91W",
+    "country_id": 32,
+    "currency_code": "ZAR",
+    "gender": "Female",
+    "referral_source": "Search Engine",
+    "security_question": "family_birth_city",
+    "security_answer_hash": "$2b$10$Y7E9fhogPtBmv27K8d3l2O0R0dHiqXNG//2Tt3G/RwyveS4qONwrG"
+  }
+]

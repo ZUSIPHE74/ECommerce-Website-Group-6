@@ -9,7 +9,7 @@ import Login from '../pages/Login.vue'
 import Register from '../pages/Register.vue'
 import ForgotPassword from '../pages/ForgotPassword.vue'
 import Profile from '../pages/Profile.vue'
-import Dashboard from '../pages/Dashboard.vue'
+import ProfileDashboard from '../pages/ProfileDashboard.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -22,8 +22,9 @@ const routes = [
   { path: '/register', component: Register },
   { path: '/forgot-password', component: ForgotPassword },
 
+  { path: '/profile', redirect: '/account/profile' },
   { path: '/account/profile', component: Profile },
-  { path: '/dashboard', component: Dashboard },
+  { path: '/dashboard', component: ProfileDashboard },
 
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
