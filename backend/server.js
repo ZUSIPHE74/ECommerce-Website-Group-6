@@ -111,6 +111,21 @@ app.delete('/cart', async (req, res) => {
   }
 });
 
+// Clear all cart items for a specific user
+app.delete('/cart/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    await pool.query(
+      'DELETE FROM cart_items WHERE user_id = ?',
+      [userId]
+    );
+    res.json({ message: 'Cart cleared' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // =================
 // SERVER
 // =================

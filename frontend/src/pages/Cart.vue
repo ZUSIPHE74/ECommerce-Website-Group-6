@@ -40,13 +40,33 @@
         >
           Proceed to Checkout
         </button>
+
+        <button
+          v-if="cart.length > 0"
+          @click="openClearConfirm"
+          class="clear-cart-btn"
+        >
+          Remove All
+        </button>
+      </div>
+    </div>
+
+    <!-- Clear cart confirmation modal -->
+    <div v-if="showClearConfirm" class="modal-overlay">
+      <div class="modal">
+        <h3>Remove all items?</h3>
+        <p>Are you sure want to remove all items?</p>
+        <div class="modal-actions">
+          <button class="modal-cancel" @click="closeClearConfirm">Cancel</button>
+          <button class="modal-confirm" @click="clearCart">Yes, Remove All</button>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { formatMoney } from '../utils/currency'
@@ -65,6 +85,7 @@ const router = useRouter()
 const cart = computed(() => store.state.Cart || [])
 const cartCount = computed(() => store.getters.cartCount || 0)
 const cartTotal = computed(() => store.getters.cartTotal || 0)
+const showClearConfirm = ref(false)
 
 // Fetch cart on load
 onMounted(() => {
@@ -85,6 +106,23 @@ function removeItem(productId) {
 // Go to checkout
 function goToCheckout() {
   router.push('/checkout')
+}
+
+// Open clear cart confirmation modal
+function openClearConfirm() {
+  showClearConfirm.value = true
+}
+
+// Close clear cart confirmation modal
+function closeClearConfirm() {
+  showClearConfirm.value = false
+}
+
+// Clear cart (if needed)
+function clearCart() {
+  const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
+  store.dispatch('clearCart', resolvedUserId)
+  closeClearConfirm()
 }
 </script>
 
@@ -157,5 +195,74 @@ function goToCheckout() {
 
 .checkout-btn:hover {
   background-color: #1e3a8a;
+}
+
+.clear-cart-btn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.clear-cart-btn:hover {
+  background-color: #b91c1c;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.modal h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.modal p {
+  margin: 0;
+  color: #475569;
+}
+
+.modal-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-cancel,
+.modal-confirm {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.modal-cancel {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modal-confirm {
+  background: #dc2626;
+  color: #ffffff;
 }
 </style>
