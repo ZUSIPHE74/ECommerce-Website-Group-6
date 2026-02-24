@@ -34,7 +34,7 @@
                 </label>
                 <label class="payment-option">
                   <input type="radio" v-model="paymentMethod" value="eft" />
-                  <span>EFT</span>
+                  <span>Instant EFT (Auto)</span>
                 </label>
              </div>
 

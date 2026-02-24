@@ -31,6 +31,12 @@
         <input v-model="paypal.email" type="email" placeholder="PayPal Email" required />
         <input v-model="paypal.reference" type="text" placeholder="PayPal Reference (optional)" />
       </div>
+      <div v-else-if="checkoutData.paymentMethod === 'eft'" class="form">
+        <p class="hint">
+          Instant EFT: choose your bank and continue. In production this would redirect to a secure bank flow.
+        </p>
+        <input v-model="eftAuto.bankName" type="text" placeholder="Bank Name" required />
+      </div>
 
       <p v-else class="hint">
         Click Pay Now to complete this {{ paymentMethodLabel }} payment.
@@ -65,11 +71,15 @@ const paypal = reactive({
   reference: ''
 })
 
+const eftAuto = reactive({
+  bankName: ''
+})
+
 const paymentMethodLabel = computed(() => {
   if (!checkoutData) return ''
   if (checkoutData.paymentMethod === 'card') return 'Credit/Debit Card'
   if (checkoutData.paymentMethod === 'paypal') return 'PayPal'
-  if (checkoutData.paymentMethod === 'eft') return 'EFT'
+  if (checkoutData.paymentMethod === 'eft') return 'Instant EFT'
   return 'Payment'
 })
 
@@ -94,7 +104,18 @@ function completePayment() {
     }
   }
 
-  store.dispatch('clearCart')
+  if (checkoutData.paymentMethod === 'eft') {
+    if (!eftAuto.bankName.trim()) {
+      alert('Field required: bank name for Instant EFT.')
+      return
+    }
+  }
+
+  sessionStorage.setItem('orderPaymentStatus', 'Payment Received')
+  sessionStorage.setItem('orderPaymentMethod', paymentMethodLabel.value)
+
+  const userId = Number(localStorage.getItem('userId')) || 1
+  store.dispatch('clearCart', userId)
   sessionStorage.removeItem('pendingCheckout')
   router.push('/order-success')
 }
