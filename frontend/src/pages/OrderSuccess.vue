@@ -2,6 +2,12 @@
   <section class="success">
     <div class="card">
       <h2>Order Placed Successfully</h2>
+      <p class="status-line">
+        <strong>Status:</strong> {{ paymentStatus }}
+      </p>
+      <p v-if="paymentMethod" class="status-line">
+        <strong>Method:</strong> {{ paymentMethod }}
+      </p>
       <p>Your payment was successful.</p>
 
       <div class="actions">
@@ -13,9 +19,12 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const paymentStatus = ref(sessionStorage.getItem('orderPaymentStatus') || 'Payment Received')
+const paymentMethod = ref(sessionStorage.getItem('orderPaymentMethod') || '')
 
 function goToCart() {
   router.push('/cart')
@@ -53,6 +62,10 @@ function goToShop() {
 .card p {
   margin: 0 0 18px;
   color: #cbd5e1;
+}
+
+.status-line {
+  margin: 0 0 8px;
 }
 
 .actions {
