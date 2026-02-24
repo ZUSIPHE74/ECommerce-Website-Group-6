@@ -42,7 +42,7 @@
         </button>
 
         <button
-          v-if="cart.length > 0"
+          v-if="cartCount > 1"
           @click="openClearConfirm"
           class="clear-cart-btn"
         >
