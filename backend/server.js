@@ -111,7 +111,7 @@ app.delete('/cart', async (req, res) => {
   }
 });
 
-// Clear all cart items for a specific user
+// Clear all cart items 
 app.delete('/cart/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
