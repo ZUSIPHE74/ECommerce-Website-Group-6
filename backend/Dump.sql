@@ -33,40 +33,6 @@ INSERT INTO `currencies` (`currency_code`, `currency_name`, `currency_symbol`) V
 ('AED', 'UAE Dirham', 'د.إ');
 
 -- =====================================
--- COUNTRIES
--- =====================================
-CREATE TABLE `countries` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `country_name` VARCHAR(100) NOT NULL,
-    `country_code` VARCHAR(10) NOT NULL UNIQUE,
-    `currency_code` VARCHAR(10) NOT NULL,
-    FOREIGN KEY (`currency_code`) REFERENCES `currencies`(`currency_code`)
-);
-
-INSERT INTO `countries` (`country_name`, `country_code`, `currency_code`) VALUES
-('South Africa', 'ZA', 'ZAR'),
-('United States', 'US', 'USD'),
-('United Kingdom', 'GB', 'GBP'),
-('France', 'FR', 'EUR'),
-('Nigeria', 'NG', 'NGN'),
-('Kenya', 'KE', 'KES'),
-('Canada', 'CA', 'CAD'),
-('Australia', 'AU', 'AUD'),
-('Germany', 'DE', 'EUR'),
-('Japan', 'JP', 'JPY'),
-('China', 'CN', 'CNY'),
-('India', 'IN', 'INR'),
-('Brazil', 'BR', 'BRL'),
-('Mexico', 'MX', 'MXN'),
-('Russia', 'RU', 'RUB'),
-('South Korea', 'KR', 'KRW'),
-('Italy', 'IT', 'EUR'),
-('Spain', 'ES', 'EUR'),
-('Egypt', 'EG', 'EGP'),
-('Saudi Arabia', 'SA', 'SAR'),
-('United Arab Emirates', 'AE', 'AED');
-
--- =====================================
 -- CURRENCY RATES
 -- =====================================
 CREATE TABLE `currency_rates` (
@@ -99,19 +65,20 @@ CREATE TABLE `users` (
   `currency_code` VARCHAR(10),
   `gender` VARCHAR(20),
   `referral_source` VARCHAR(50),
+  `security_question` VARCHAR(200),
+  `security_answer_hash` VARCHAR(255),
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`country_id`) REFERENCES `countries`(`id`),
   FOREIGN KEY (`currency_code`) REFERENCES `currencies`(`currency_code`)
 );
 
 INSERT INTO `users`
-(`full_name`, `email`, `password`, `role`, `country_id`, `currency_code`, `gender`, `referral_source`) 
-VALUES ('Liam Johnson', 'liam.johnson@gmail.com', '$2b$10$6P4NSg/OHCNY9JrRg365JO/QTo3j1jkU1PTQ6IGJdlK/CNiqbhgfi','user', 21, 'AED', NULL, NULL),
-       ('Olivia Smith', 'olivia.smith@email.com', '$2b$10$6P4NSg/OHCNY9JrRg365JO/QTo3j1jkU1PTQ6IGJdlK/CNiqbhgfi','user', 8, 'AUD', NULL, NULL),
-	     ('Thomas Price', 'thomas.price@email.com', 'hashedpassword', 'user', NULL, NULL, NULL, NULL),
-       ('Wyatt Bennett', 'wyatt.bennett@email.com', 'hashedpassword', 'user', NULL, NULL, NULL, NULL),
-       ('Jordan Foster', 'jordan.foster@email.com', 'hashedpassword', 'user', NULL, NULL, NULL, NULL),
-       ('Sam Smith', 'sam.smith@email.com', '$2b$10$MITQ1WD7vGUiFLnDNxykUOOVF1GYHeGJ.pM42c4s5I5CMXwvn5kYG','user', 15, 'RUB', 'Male', 'Other');
+(`full_name`, `email`, `password`, `role`, `country_id`, `currency_code`, `gender`, `referral_source`, `security_question`, `security_answer_hash`) 
+VALUES ('Liam Johnson', 'liam.johnson@gmail.com', '$2b$10$6P4NSg/OHCNY9JrRg365JO/QTo3j1jkU1PTQ6IGJdlK/CNiqbhgfi','user', 21, 'AED', NULL, NULL, NULL, NULL),
+       ('Olivia Smith', 'olivia.smith@email.com', '$2b$10$6P4NSg/OHCNY9JrRg365JO/QTo3j1jkU1PTQ6IGJdlK/CNiqbhgfi','user', 8, 'AUD', NULL, NULL, NULL, NULL),
+	     ('Thomas Price', 'thomas.price@email.com', 'hashedpassword', 'user', NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Wyatt Bennett', 'wyatt.bennett@email.com', 'hashedpassword', 'user', NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Jordan Foster', 'jordan.foster@email.com', 'hashedpassword', 'user', NULL, NULL, NULL, NULL, NULL, NULL),
+       ('Sam Smith', 'sam.smith@email.com', '$2b$10$MITQ1WD7vGUiFLnDNxykUOOVF1GYHeGJ.pM42c4s5I5CMXwvn5kYG','user', 15, 'RUB', 'Male', 'Other', NULL, NULL);
 
 -- =====================================
 -- CATEGORIES

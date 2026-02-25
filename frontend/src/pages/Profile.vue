@@ -8,7 +8,7 @@
             <div class="avatar">{{ user.full_name.charAt(0) }}</div>
           </div>
           <div class="header-info">
-            <h1>Profile of a Person</h1>
+            <h1>{{ user.full_name }}</h1>
             <p class="role-tag">{{ user.role?.toUpperCase() || 'USER' }}</p>
           </div>
         </div>
@@ -31,7 +31,7 @@
             <p>{{ user.country_name || 'Not specified' }}</p>
           </div>
           <div class="info-group">
-            <label>Currency Preference</label>
+            <label>Currency</label>
             <p>{{ user.currency_code || 'USD' }}</p>
           </div>
           <div class="info-group">
@@ -41,8 +41,8 @@
         </div>
 
         <div class="actions">
-          <router-link to="/dashboard" class="btn-primary">Edit Development Details</router-link>
-          <button @click="logout" class="btn-secondary">Terminate Session</button>
+          <router-link to="/dashboard" class="btn-primary">Edit Your Profile</router-link>
+          <button @click="closeProfile" class="btn-secondary">Close Profile</button>
         </div>
       </div>
     </div>
@@ -54,6 +54,8 @@
 </template>
 
 <script>
+import { getWithFallback } from '../utils/apiRequest'
+
 export default {
   data() {
     return {
@@ -68,19 +70,11 @@ export default {
     }
 
     try {
-      const response = await fetch('http://localhost:5050/api/user/profile', {
-        headers: {
-          'x-auth-token': token
-        }
+      this.user = await getWithFallback('/api/user/profile', {
+        'x-auth-token': token
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
-      }
-
-      this.user = await response.json();
+      localStorage.setItem('user', JSON.stringify(this.user));
     } catch (err) {
-      console.error(err);
       this.logout();
     }
   },
@@ -97,6 +91,9 @@ export default {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       this.$router.push('/login');
+    },
+    closeProfile() {
+      this.$router.push('/');
     }
   }
 }

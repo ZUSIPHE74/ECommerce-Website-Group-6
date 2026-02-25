@@ -11,8 +11,8 @@
             type="email"
             v-model="email"
             required
-            placeholder="Username"
-            autocomplete="username"
+            placeholder="Email address"
+            autocomplete="email"
           />
         </div>
 
@@ -49,6 +49,7 @@
 </template>
 
 <script>
+import { postWithFallback } from '../utils/apiRequest'
 export default {
   data() {
     return {
@@ -61,25 +62,24 @@ export default {
   methods: {
     async handleLogin() {
       try {
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: this.email, password: this.password })
+        this.error = '';
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        const data = await postWithFallback('/api/auth/login', {
+          email: this.email,
+          password: this.password
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Login failed');
-        }
 
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('rememberMe', this.rememberMe ? '1' : '0');
+        if (data?.user?.currency_code) {
+          localStorage.setItem('currency_code', data.user.currency_code);
+        }
 
-        this.$router.push('/profile');
+        this.$router.push('/account/profile');
       } catch (err) {
-        this.error = err?.message || 'Unable to reach server. Please try again.';
+        this.error = err?.message ? `Login failed (${err.message})` : 'Unable to reach server. Please try again.';
       }
     }
   }
