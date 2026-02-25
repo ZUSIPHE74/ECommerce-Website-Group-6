@@ -72,8 +72,12 @@ actions: {
         dispatch('fetchCart', payload.user_Id);
     },
 
-    clearCart({ commit }) {
+    async clearCart({ commit, dispatch }, userId) {
+        await fetch(`http://localhost:5050/cart/${userId}`, {
+            method: 'DELETE'
+        });
         commit('CLEAR_CART');
+        dispatch('fetchCart', userId);
     }
-}
+	}
 })

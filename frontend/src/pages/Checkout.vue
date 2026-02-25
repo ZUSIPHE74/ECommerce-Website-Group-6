@@ -1,49 +1,80 @@
 <template>
-    <section class="checkout">
-      <h2>Checkout</h2>
+  <section class="checkout">
+    <h2>Checkout</h2>
 
-      <!-- Show if cart is empty -->
-      <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
+    <!-- Show if cart is empty -->
+    <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
 
-      <div v-else>
-        <!-- Display cart items in checkout -->
-         <div v-for="items in cart" :key="items.id" class="checkout-item">
-            <p>{{ items.name }} x {{ items.quantity }}</p>
-            <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
-         </div>
-
-        <!-- Total summary -->
-        <div class="checkout-summary">
-            <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
-            <p>Shipping: {{ formatMoney(shippingCost) }}</p>
-            <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
-            <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
-        </div>
-
-            <!-- Shipping info -->
-             <div class="checkout-form">
-                <h3>Shipping Info</h3>
-                <input v-model="shipping.name" type="text" placeholder="Full Name" required />
-                <input v-model="shipping.address" type="text" placeholder="Address" required />
-                <input v-model="shipping.email" type="email" placeholder="Email" required />
-                <input v-model="shipping.phone" type="tel" placeholder="Phone Number" required />
-             </div>
-
-            <!-- Payment method -->
-             <h3>Payment Method</h3>
-             <select v-model="paymentMethod" required>
-                <option value="">Select Payment</option>
-                <option value="card">Credit/Debit Card</option>
-                <option value="paypal">PayPal</option>
-                <option value="eft">EFT</option>
-             </select>
-
-             <!-- Place Order-->
-              <button @click="placeOrder" class="place-order-btn">
-                Place Order
-              </button>
+    <div v-else>
+      <!-- Display cart items in checkout -->
+      <div v-for="items in cart" :key="items.id" class="checkout-item">
+        <p>{{ items.name }} x {{ items.quantity }}</p>
+        <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
       </div>
-    </section>
+
+      <!-- Shipping info -->
+      <div class="checkout-form">
+        <h3>Shipping Info</h3>
+        <input v-model="shipping.name" type="text" placeholder="Full Name" required />
+        <input v-model="shipping.address" type="text" placeholder="Address" required />
+        <input v-model="shipping.email" type="email" placeholder="Email" required />
+        <input v-model="shipping.phone" type="tel" placeholder="Phone Number" required />
+      </div>
+
+      <!-- Payment method -->
+      <h3>Payment Method</h3>
+      <div class="payment-options">
+
+        <label class="payment-option">
+          <input type="radio" v-model="paymentMethod" value="card" />
+          <span>Credit/Debit Card</span>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" v-model="paymentMethod" value="paypal" />
+          <span>PayPal</span>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" v-model="paymentMethod" value="eft" />
+          <span>Instant EFT (Auto)</span>
+        </label>
+
+        <!-- LAYBY OPTION (Only for expensive orders) -->
+        <label 
+          v-if="Number(totalWithShipping) >= 2000" 
+          class="payment-option"
+        >
+          <input type="radio" v-model="paymentMethod" value="layby" />
+          <span>Layby (Pay Over Time)</span>
+        </label>
+
+      </div>
+
+      <!-- Layby Terms -->
+      <div v-if="paymentMethod === 'layby'" class="layby-terms">
+        <input type="checkbox" v-model="acceptedTerms" />
+        <label>I have read and agree to the Terms & Conditions</label>
+
+        <p v-if="laybyError" class="error-msg">
+          Have you read the Terms & Conditions? Please confirm before continuing.
+        </p>
+      </div>
+
+      <!-- Total summary -->
+      <div class="checkout-summary payment-summary">
+        <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
+        <p>Shipping: {{ formatMoney(shippingCost) }}</p>
+        <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
+        <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
+      </div>
+
+      <!-- Place Order-->
+      <button @click="placeOrder" class="place-order-btn">
+        Place Order
+      </button>
+    </div>
+  </section>
 </template>
 
 <script setup>
@@ -77,65 +108,150 @@ const shipping = reactive({
 // Payment method
 const paymentMethod = ref('')
 
+// ✅ Layby state
+const acceptedTerms = ref(false)
+const laybyError = ref(false)
+
 // Place order function
 function placeOrder() {
-    if (!cart.value.length) return alert('Your cart is empty.')
-    if (!shipping.name || !shipping.address || !shipping.email || !shipping.phone) 
-        return alert('Please fill in all shipping information.')
-    if (!paymentMethod.value) return alert('Please select a payment method.')
+  if (!cart.value.length) 
+    return alert('Your cart is empty.')
 
-    alert('Order placed successfully!')
+  if (!shipping.name || !shipping.address || !shipping.email || !shipping.phone) 
+    return alert('Please fill in all shipping information.')
 
-    // Clear local checkout state and redirect.
-    store.dispatch('clearCart')
-    router.push('/order-confirmation')
+  if (!paymentMethod.value) 
+    return alert('Please select a payment method.')
+
+  // ✅ Layby validation
+  if (paymentMethod.value === 'layby' && !acceptedTerms.value) {
+    laybyError.value = true
+    return
+  }
+
+  laybyError.value = false
+
+  const checkoutPayload = {
+    shipping: { ...shipping },
+    paymentMethod: paymentMethod.value,
+    acceptedTerms: acceptedTerms.value,
+    totals: {
+      subtotal: Number(cartTotal.value),
+      shipping: Number(shippingCost.value),
+      importCharges: Number(customsCharges.value),
+      total: Number(totalWithShipping.value)
+    }
+  }
+
+  sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutPayload))
+  router.push('/payment')
 }
 </script>
 
 <style scoped>
 .checkout {
-  max-width: 700px;
-  margin: 32px auto;
-  padding: 16px;
-  border: 1px solid #e2e8f0;
+  max-width: 760px;
+  margin: 20px auto;
+  padding: 18px;
+  border: 1px solid #00ffff;
   border-radius: 8px;
-  background-color: #f9fafb;
+  background-color: #121212;
+  color: #f5f5f5;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.08);
 }
 
 .checkout h2 {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  color: #ffffff;
 }
 
 .checkout-item {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid #2a2a2a;
 }
 
 .checkout-summary {
-  margin-top: 12px;
+  margin-top: 8px;
   font-weight: 600;
   text-align: right;
 }
 
 .checkout-form {
-  margin-top: 16px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
 }
 
+.checkout-form h3,
+.checkout > div > h3 {
+  margin: 10px 0 8px;
+  color: #ffffff;
+}
+
 .checkout-form input,
-.checkout-form select {
+.checkout select {
   margin-bottom: 10px;
-  padding: 8px;
+  padding: 10px;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #3b3b3b;
+  background: #1a1a1a;
+  color: #f5f5f5;
+}
+
+.checkout-form input:focus,
+.checkout select:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  cursor: pointer;
+}
+
+.payment-option:hover {
+  border-color: #00ffff;
+}
+
+.payment-option input {
+  accent-color: #00ffff;
+}
+
+/* ✅ Layby Box */
+.layby-terms {
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+  background: #1a1a1a;
+}
+
+.error-msg {
+  color: #ff4d4f;
+  font-size: 14px;
+  margin-top: 6px;
 }
 
 .place-order-btn {
-  margin-top: 16px;
+  display: block;
+  margin: 20px auto 0;
   padding: 10px 16px;
   background-color: #1e40af;
   color: white;
@@ -150,8 +266,7 @@ function placeOrder() {
 
 .empty {
   text-align: center;
-  color: #64748b;
+  color: #94a3b8;
   font-style: italic;
 }
 </style>
-
