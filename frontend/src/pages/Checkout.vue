@@ -6,13 +6,13 @@
     <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
 
     <div v-else>
-      <!-- Display cart items in checkout -->
+      <!-- Display cart items -->
       <div v-for="items in cart" :key="items.id" class="checkout-item">
         <p>{{ items.name }} x {{ items.quantity }}</p>
         <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
       </div>
 
-      <!-- Shipping info -->
+      <!-- ================= SHIPPING INFO ================= -->
       <div class="checkout-form">
         <h3>Shipping Info</h3>
         <input v-model="shipping.name" type="text" placeholder="Full Name" required />
@@ -21,7 +21,7 @@
         <input v-model="shipping.phone" type="tel" placeholder="Phone Number" required />
       </div>
 
-      <!-- Payment method -->
+      <!-- ================= PAYMENT METHODS ================= -->
       <h3>Payment Method</h3>
       <div class="payment-options">
 
@@ -40,9 +40,9 @@
           <span>Instant EFT (Auto)</span>
         </label>
 
-        <!-- LAYBY OPTION (Only for expensive orders) -->
+        <!-- LAYBY OPTION (Only for expensive orders ≥ 2000) -->
         <label 
-          v-if="Number(totalWithShipping) >= 2000" 
+          v-if="Number(totalWithShipping) >= 2000"
           class="payment-option"
         >
           <input type="radio" v-model="paymentMethod" value="layby" />
@@ -51,17 +51,37 @@
 
       </div>
 
-      <!-- Layby Terms -->
+      <!-- ================= LAYBY SECTION ================= -->
       <div v-if="paymentMethod === 'layby'" class="layby-terms">
-        <input type="checkbox" v-model="acceptedTerms" />
-        <label>I have read and agree to the Terms & Conditions</label>
 
+        <!-- How Layby Works Box -->
+        <div class="layby-info">
+          <h4>How Layby Works</h4>
+          <ul>
+            <li>A 20% deposit is required to secure your order.</li>
+            <li>The remaining balance must be paid within 3 months.</li>
+            <li>No delivery will be made until full payment is received.</li>
+            <li>If payments are missed, the order may be cancelled.</li>
+            <li>Cancellation may result in a 10% admin fee deduction.</li>
+          </ul>
+        </div>
+
+        <!-- Terms & Conditions Checkbox -->
+        <div class="layby-checkbox">
+          <input type="checkbox" v-model="acceptedTerms" />
+          <label>
+            I have read and agree to the Layby Terms & Conditions
+          </label>
+        </div>
+
+        <!-- Error Message -->
         <p v-if="laybyError" class="error-msg">
           Have you read the Terms & Conditions? Please confirm before continuing.
         </p>
+
       </div>
 
-      <!-- Total summary -->
+      <!-- ================= ORDER SUMMARY ================= -->
       <div class="checkout-summary payment-summary">
         <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
         <p>Shipping: {{ formatMoney(shippingCost) }}</p>
@@ -69,10 +89,11 @@
         <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
       </div>
 
-      <!-- Place Order-->
+      <!-- ================= PLACE ORDER BUTTON ================= -->
       <button @click="placeOrder" class="place-order-btn">
         Place Order
       </button>
+
     </div>
   </section>
 </template>
@@ -80,13 +101,13 @@
 <script setup>
 import router from '@/router'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useStore } from 'vuex' 
+import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
 
 const store = useStore()
 const userId = Number(localStorage.getItem('userId')) || 1
 
-// Cart data from Vuex
+// ================= CART DATA =================
 const cart = computed(() => store.state.Cart || [])
 const cartTotal = computed(() => store.getters.cartTotal)
 const shippingCost = computed(() => store.getters.shippingCost)
@@ -97,7 +118,7 @@ onMounted(() => {
   store.dispatch('fetchCart', userId)
 })
 
-// Shipping info form
+// ================= SHIPPING FORM =================
 const shipping = reactive({
   name: '',
   address: '',
@@ -105,15 +126,16 @@ const shipping = reactive({
   phone: ''
 })
 
-// Payment method
+// ================= PAYMENT METHOD =================
 const paymentMethod = ref('')
 
-// ✅ Layby state
+// ================= LAYBY STATE =================
 const acceptedTerms = ref(false)
 const laybyError = ref(false)
 
-// Place order function
+// ================= PLACE ORDER FUNCTION =================
 function placeOrder() {
+
   if (!cart.value.length) 
     return alert('Your cart is empty.')
 
@@ -123,7 +145,7 @@ function placeOrder() {
   if (!paymentMethod.value) 
     return alert('Please select a payment method.')
 
-  // ✅ Layby validation
+  // Layby validation (must accept terms)
   if (paymentMethod.value === 'layby' && !acceptedTerms.value) {
     laybyError.value = true
     return
@@ -149,6 +171,8 @@ function placeOrder() {
 </script>
 
 <style scoped>
+
+/* Checkout page wrapper */
 .checkout {
   max-width: 760px;
   margin: 20px auto;
@@ -163,9 +187,9 @@ function placeOrder() {
 .checkout h2 {
   text-align: center;
   margin-bottom: 14px;
-  color: #ffffff;
 }
 
+/* Cart items */
 .checkout-item {
   display: flex;
   justify-content: space-between;
@@ -173,26 +197,14 @@ function placeOrder() {
   border-bottom: 1px solid #2a2a2a;
 }
 
-.checkout-summary {
-  margin-top: 8px;
-  font-weight: 600;
-  text-align: right;
-}
-
+/* Shipping form */
 .checkout-form {
   margin-top: 8px;
   display: flex;
   flex-direction: column;
 }
 
-.checkout-form h3,
-.checkout > div > h3 {
-  margin: 10px 0 8px;
-  color: #ffffff;
-}
-
-.checkout-form input,
-.checkout select {
+.checkout-form input {
   margin-bottom: 10px;
   padding: 10px;
   border-radius: 6px;
@@ -201,13 +213,12 @@ function placeOrder() {
   color: #f5f5f5;
 }
 
-.checkout-form input:focus,
-.checkout select:focus {
+.checkout-form input:focus {
   outline: none;
   border-color: #00ffff;
-  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
 }
 
+/* Payment options */
 .payment-options {
   display: flex;
   flex-direction: column;
@@ -234,13 +245,40 @@ function placeOrder() {
   accent-color: #00ffff;
 }
 
-/* ✅ Layby Box */
+/* Layby section */
 .layby-terms {
   margin: 12px 0;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #3b3b3b;
   border-radius: 6px;
   background: #1a1a1a;
+}
+
+/* Layby info box */
+.layby-info {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #00ffff;
+  border-radius: 6px;
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.layby-info h4 {
+  margin-bottom: 6px;
+  color: #00ffff;
+}
+
+.layby-info ul {
+  padding-left: 18px;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.layby-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .error-msg {
@@ -249,6 +287,14 @@ function placeOrder() {
   margin-top: 6px;
 }
 
+/* Summary */
+.checkout-summary {
+  margin-top: 8px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Button */
 .place-order-btn {
   display: block;
   margin: 20px auto 0;
@@ -269,4 +315,5 @@ function placeOrder() {
   color: #94a3b8;
   font-style: italic;
 }
+
 </style>
