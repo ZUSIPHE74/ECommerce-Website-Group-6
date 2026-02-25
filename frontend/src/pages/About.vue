@@ -51,13 +51,13 @@
 
 <script setup>
 const managers = [
-  { name: 'ALICE JOHNSON', role: 'RETAIL DIRECTOR', photo: '' }
+  { name: 'ZUSIPHE SIDIMBA', role: 'RETAIL DIRECTOR', photo: '' }
 ]
 
 const retailTeam = [
-  { name: 'BUHLE', role: 'EXPEDITION SPECIALIST', photo: '' },
-  { name: 'ZUSIPHE', role: 'EXPEDITION SPECIALIST', photo: '' },
-  { name: 'DAVID', role: 'EXPEDITION SPECIALIST', photo: '' }
+  { name: 'TAMRYN RIPEPI', role: 'EXPEDITION SPECIALIST', photo: '' },
+  { name: 'AYOLA DUKA', role: 'EXPEDITION SPECIALIST', photo: '' },
+  { name: 'BUHLE GWELE', role: 'EXPEDITION SPECIALIST', photo: '' }
 ]
 
 const values = [

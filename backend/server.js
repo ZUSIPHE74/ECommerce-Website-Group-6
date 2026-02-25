@@ -40,13 +40,20 @@ app.get('/products', async (req, res) => {
 app.get('/cart/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
+
     const [rows] = await pool.query(
-      `SELECT c.id, c.product_id, c.quantity, p.name, p.price_usd AS price
+      `SELECT 
+         c.id,
+         c.product_id,
+         c.quantity,
+         p.name,
+         p.price
        FROM cart_items c
-       JOIN products p ON c.product_id = p.id
+       JOIN products p ON c.product_id = p.product_id
        WHERE c.user_id = ?`,
       [userId]
     );
+
     res.json(rows);
   } catch (error) {
     console.error(error.message);
