@@ -179,6 +179,7 @@ export default {
 
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userId', String(data.user.id));
 
         this.$router.push('/profile');
       } catch (err) {

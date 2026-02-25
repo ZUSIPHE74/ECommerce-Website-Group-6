@@ -176,7 +176,14 @@ CREATE TABLE `orders` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
   FOREIGN KEY (`currency_code`) REFERENCES `currencies`(`currency_code`)
+  ALTER TABLE orders
+ADD COLUMN shipping_name VARCHAR(255),
+ADD COLUMN shipping_address TEXT,
+ADD COLUMN shipping_email VARCHAR(255),
+ADD COLUMN shipping_phone VARCHAR(20),
+ADD COLUMN payment_method VARCHAR(50);
 );
+
 
 -- =====================================
 -- ORDER ITEMS
@@ -220,13 +227,13 @@ CREATE TABLE `reviews` (
 );
 
 -- =====================================
--- WISHLIST
+-- CONTACT
 -- =====================================
-CREATE TABLE `wishlist` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `user_id` INT,
-    `product_id` INT,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`),
-    FOREIGN KEY (`product_id`) REFERENCES `products`(`product_id`)
+CREATE TABLE contact_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  subject VARCHAR(255),
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

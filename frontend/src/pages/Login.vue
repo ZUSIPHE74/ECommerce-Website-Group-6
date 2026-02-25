@@ -75,6 +75,7 @@ export default {
 
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userId', String(data.user.id));
         localStorage.setItem('rememberMe', this.rememberMe ? '1' : '0');
 
         this.$router.push('/profile');
@@ -288,4 +289,3 @@ h1 {
   background: #00ffff;
 }
 </style>
-

@@ -10,6 +10,7 @@ import Register from '../pages/Register.vue'
 import ForgotPassword from '../pages/ForgotPassword.vue'
 import Profile from '../pages/Profile.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import Contact from '../pages/contact.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -25,7 +26,13 @@ const routes = [
   { path: '/account/profile', component: Profile },
   { path: '/dashboard', component: Dashboard },
 
-  { path: '/:pathMatch(.*)*', redirect: '/' }
+  { path: '/:pathMatch(.*)*', redirect: '/' },
+
+  {
+  path: '/contact',
+  name: 'Contact',
+  component: Contact
+}
 ]
 
 const router = createRouter({
