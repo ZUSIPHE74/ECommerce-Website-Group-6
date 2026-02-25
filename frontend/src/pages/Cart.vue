@@ -20,7 +20,7 @@
 
           <button 
             class="remove-btn"
-            @click="removeItem(item.product_id)"
+            @click="removeItem(item)"
           >
             Remove
           </button>
@@ -94,8 +94,11 @@ onMounted(() => {
 })
 
 // Remove item from cart
-function removeItem(productId) {
+function removeItem(item) {
   const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
+  const productId = Number(item?.product_Id ?? item?.product_id ?? item?.id)
+
+  if (!productId) return
 
   store.dispatch('removeFromCart', {
     user_Id: resolvedUserId,
@@ -119,9 +122,21 @@ function closeClearConfirm() {
 }
 
 // Clear cart (if needed)
-function clearCart() {
+async function clearCart() {
   const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
-  store.dispatch('clearCart', resolvedUserId)
+
+  const removeRequests = cart.value
+    .map((item) => Number(item?.product_Id ?? item?.product_id ?? item?.id))
+    .filter((productId) => !!productId)
+    .map((productId) =>
+      store.dispatch('removeFromCart', {
+        user_Id: resolvedUserId,
+        product_Id: productId
+      })
+    )
+
+  await Promise.all(removeRequests)
+  await store.dispatch('fetchCart', resolvedUserId)
   closeClearConfirm()
 }
 </script>

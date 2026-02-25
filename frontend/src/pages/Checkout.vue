@@ -1,57 +1,80 @@
 <template>
-    <section class="checkout">
-      <h2>Checkout</h2>
+  <section class="checkout">
+    <h2>Checkout</h2>
 
-      <!-- Show if cart is empty -->
-      <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
+    <!-- Show if cart is empty -->
+    <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
 
-      <div v-else>
-        <!-- Display cart items in checkout -->
-         <div v-for="items in cart" :key="items.id" class="checkout-item">
-            <p>{{ items.name }} x {{ items.quantity }}</p>
-            <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
-         </div>
-
-            <!-- Shipping info -->
-             <div class="checkout-form">
-                <h3>Shipping Info</h3>
-                <input v-model="shipping.name" type="text" placeholder="Full Name" required />
-                <input v-model="shipping.address" type="text" placeholder="Address" required />
-                <input v-model="shipping.email" type="email" placeholder="Email" required />
-                <input v-model="shipping.phone" type="tel" placeholder="Phone Number" required />
-             </div>
-
-            <!-- Payment method -->
-             <h3>Payment Method</h3>
-             <div class="payment-options">
-                <label class="payment-option">
-                  <input type="radio" v-model="paymentMethod" value="card" />
-                  <span>Credit/Debit Card</span>
-                </label>
-                <label class="payment-option">
-                  <input type="radio" v-model="paymentMethod" value="paypal" />
-                  <span>PayPal</span>
-                </label>
-                <label class="payment-option">
-                  <input type="radio" v-model="paymentMethod" value="eft" />
-                  <span>Instant EFT (Auto)</span>
-                </label>
-             </div>
-
-             <!-- Total summary -->
-             <div class="checkout-summary payment-summary">
-                <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
-                <p>Shipping: {{ formatMoney(shippingCost) }}</p>
-                <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
-                <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
-             </div>
-
-             <!-- Place Order-->
-              <button @click="placeOrder" class="place-order-btn">
-                Place Order
-              </button>
+    <div v-else>
+      <!-- Display cart items in checkout -->
+      <div v-for="items in cart" :key="items.id" class="checkout-item">
+        <p>{{ items.name }} x {{ items.quantity }}</p>
+        <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
       </div>
-    </section>
+
+      <!-- Shipping info -->
+      <div class="checkout-form">
+        <h3>Shipping Info</h3>
+        <input v-model="shipping.name" type="text" placeholder="Full Name" required />
+        <input v-model="shipping.address" type="text" placeholder="Address" required />
+        <input v-model="shipping.email" type="email" placeholder="Email" required />
+        <input v-model="shipping.phone" type="tel" placeholder="Phone Number" required />
+      </div>
+
+      <!-- Payment method -->
+      <h3>Payment Method</h3>
+      <div class="payment-options">
+
+        <label class="payment-option">
+          <input type="radio" v-model="paymentMethod" value="card" />
+          <span>Credit/Debit Card</span>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" v-model="paymentMethod" value="paypal" />
+          <span>PayPal</span>
+        </label>
+
+        <label class="payment-option">
+          <input type="radio" v-model="paymentMethod" value="eft" />
+          <span>Instant EFT (Auto)</span>
+        </label>
+
+        <!-- LAYBY OPTION (Only for expensive orders) -->
+        <label 
+          v-if="Number(totalWithShipping) >= 2000" 
+          class="payment-option"
+        >
+          <input type="radio" v-model="paymentMethod" value="layby" />
+          <span>Layby (Pay Over Time)</span>
+        </label>
+
+      </div>
+
+      <!-- Layby Terms -->
+      <div v-if="paymentMethod === 'layby'" class="layby-terms">
+        <input type="checkbox" v-model="acceptedTerms" />
+        <label>I have read and agree to the Terms & Conditions</label>
+
+        <p v-if="laybyError" class="error-msg">
+          Have you read the Terms & Conditions? Please confirm before continuing.
+        </p>
+      </div>
+
+      <!-- Total summary -->
+      <div class="checkout-summary payment-summary">
+        <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
+        <p>Shipping: {{ formatMoney(shippingCost) }}</p>
+        <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
+        <p><strong>Total: {{ formatMoney(totalWithShipping) }}</strong></p>
+      </div>
+
+      <!-- Place Order-->
+      <button @click="placeOrder" class="place-order-btn">
+        Place Order
+      </button>
+    </div>
+  </section>
 </template>
 
 <script setup>
@@ -85,26 +108,43 @@ const shipping = reactive({
 // Payment method
 const paymentMethod = ref('')
 
+// ✅ Layby state
+const acceptedTerms = ref(false)
+const laybyError = ref(false)
+
 // Place order function
 function placeOrder() {
-    if (!cart.value.length) return alert('Your cart is empty.')
-    if (!shipping.name || !shipping.address || !shipping.email || !shipping.phone) 
-        return alert('Please fill in all shipping information.')
-    if (!paymentMethod.value) return alert('Please select a payment method.')
+  if (!cart.value.length) 
+    return alert('Your cart is empty.')
 
-    const checkoutPayload = {
-      shipping: { ...shipping },
-      paymentMethod: paymentMethod.value,
-      totals: {
-        subtotal: Number(cartTotal.value),
-        shipping: Number(shippingCost.value),
-        importCharges: Number(customsCharges.value),
-        total: Number(totalWithShipping.value)
-      }
+  if (!shipping.name || !shipping.address || !shipping.email || !shipping.phone) 
+    return alert('Please fill in all shipping information.')
+
+  if (!paymentMethod.value) 
+    return alert('Please select a payment method.')
+
+  // ✅ Layby validation
+  if (paymentMethod.value === 'layby' && !acceptedTerms.value) {
+    laybyError.value = true
+    return
+  }
+
+  laybyError.value = false
+
+  const checkoutPayload = {
+    shipping: { ...shipping },
+    paymentMethod: paymentMethod.value,
+    acceptedTerms: acceptedTerms.value,
+    totals: {
+      subtotal: Number(cartTotal.value),
+      shipping: Number(shippingCost.value),
+      importCharges: Number(customsCharges.value),
+      total: Number(totalWithShipping.value)
     }
+  }
 
-    sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutPayload))
-    router.push('/payment')
+  sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutPayload))
+  router.push('/payment')
 }
 </script>
 
@@ -168,23 +208,6 @@ function placeOrder() {
   box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
 }
 
-.checkout select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, #00ffff 50%),
-    linear-gradient(135deg, #00ffff 50%, transparent 50%);
-  background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
-  padding-right: 34px;
-}
-
-.checkout select option {
-  background: #121212;
-  color: #f5f5f5;
-}
-
 .payment-options {
   display: flex;
   flex-direction: column;
@@ -211,9 +234,19 @@ function placeOrder() {
   accent-color: #00ffff;
 }
 
-.payment-summary {
+/* ✅ Layby Box */
+.layby-terms {
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid #3b3b3b;
+  border-radius: 6px;
+  background: #1a1a1a;
+}
+
+.error-msg {
+  color: #ff4d4f;
+  font-size: 14px;
   margin-top: 6px;
-  margin-bottom: 4px;
 }
 
 .place-order-btn {

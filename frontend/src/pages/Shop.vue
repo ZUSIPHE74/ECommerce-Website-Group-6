@@ -152,6 +152,13 @@
 <script>
 import axios from 'axios';
 import { formatMoney } from '../utils/currency';
+import horizonImg from '../assets/luggage.png';
+import pulseImg from '../assets/backpack.png';
+import auraImg from '../assets/flask cup.png';
+import zenithImg from '../assets/headset.png';
+import neckImg from '../assets/neck pillow.png';
+import lumeImg from '../assets/sleep mask.png';
+import fluxImg from '../assets/adapter charger.png';
 
 export default {
   name: "Shop",
@@ -254,14 +261,17 @@ export default {
     
     getProductImage(product) {
       // Map product names to images (you can replace with actual image URLs from database)
-      const imageMap = {
-        'Horizon S1 Luggage': 'https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-        'Pulse B1 Backpack': 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-        'Aura T1 Flask Cup': 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-        'Zenith Headset': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-        'Zen N1 Neck Pillow': 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-        'Lume E1 Sleep Mask': 'https://images.unsplash.com/photo-1598449356475-b9f71db7d847?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80'
-      };
+    
+    const imageMap = {
+      'Horizon S1 Luggage': horizonImg,
+      'Pulse B1 Backpack': pulseImg,
+      'Aura T1 Flask Cup': auraImg,
+      'Zenith Headset': zenithImg,
+      'Zen N1 Neck Pillow': neckImg,
+      'Lume E1 Sleep Mask': lumeImg,
+      'Flux P1 Adapter': fluxImg
+    }
+
       
       return imageMap[product.name] || 'https://via.placeholder.com/300x200?text=Product+Image';
     },
