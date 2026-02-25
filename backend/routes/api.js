@@ -13,7 +13,6 @@ import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Product routes
 router.get('/products', getAllProducts);
 router.get('/products/search', searchProducts);
 router.get('/products/category/:category', getProductsByCategory);
@@ -22,18 +21,18 @@ router.post('/products', createProduct);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 
-// POST LOGIN
 router.post('/register', loginController.registerUser);
 router.post('/login', loginController.loginUser);
-// GET, POST , PATCH FOR MIDDLEWARE
+router.post('/auth/register', loginController.registerUser);
+router.post('/auth/login', loginController.loginUser);
 router.get('/user/profile', authMiddleware, loginController.getUserProfile);
 router.put('/user/profile', authMiddleware, loginController.updateUserProfile);
 router.post('/forgot-password', loginController.forgotPassword);
-// GET LOGIN
+router.post('/reset-password-security', loginController.resetPasswordSecurity);
+router.post('/verify-security-answer', loginController.verifySecurityAnswer);
 router.get('/countries', loginController.getCountries);
 router.get('/currencies', loginController.getCurrencies);
 
-// Test route
 router.get('/', (req, res) => {
   res.json({ message: "Welcome to the E-commerce API" });
 });

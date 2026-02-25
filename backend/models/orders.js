@@ -16,8 +16,8 @@ class OrderModel {
   static async updateOrderStatus(orderId, status) {
     await db.query(
       `UPDATE orders 
-       SET status = ?
-       WHERE id = ?`,
+        SET status = ?
+        WHERE id = ?`,
       [status, orderId]
     );
   }
