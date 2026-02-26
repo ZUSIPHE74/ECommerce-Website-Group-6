@@ -160,6 +160,9 @@ import neckImg from '../assets/neck pillow.png';
 import lumeImg from '../assets/sleep mask.png';
 import fluxImg from '../assets/adapter charger.png';
 
+const IMAGE_FALLBACK =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'><rect width='300' height='200' fill='%23222222'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23bbbbbb' font-family='Arial' font-size='16'>Image Not Available</text></svg>";
+
 export default {
   name: "Shop",
   
@@ -273,11 +276,12 @@ export default {
     }
 
       
-      return imageMap[product.name] || 'https://via.placeholder.com/300x200?text=Product+Image';
+      return imageMap[product.name] || IMAGE_FALLBACK;
     },
     
     handleImageError(e) {
-      e.target.src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+      e.target.onerror = null;
+      e.target.src = IMAGE_FALLBACK;
     },
     
     openProductModal(product) {
