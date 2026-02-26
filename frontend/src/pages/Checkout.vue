@@ -56,13 +56,17 @@
 
         <!-- How Layby Works Box -->
         <div class="layby-info">
+          <h3>Terms and Conditions</h3>
           <h4>How Layby Works</h4>
           <ul>
-            <li>A 20% deposit is required to secure your order.</li>
-            <li>The remaining balance must be paid within 3 months.</li>
+            <li>A 20% non-refundable deposit is required to secure your order.</li>
+            <li>Customers may choose a 12-month or 24-month layby contract</li>
+            <li>The remaining balance will be debited monthly according to contract term.</li>
             <li>No delivery will be made until full payment is received.</li>
-            <li>If payments are missed, the order may be cancelled.</li>
-            <li>Cancellation may result in a 10% admin fee deduction.</li>
+            <li>If payments are missed for 3 consecutive months, the layby account will be placed on hold.</li>
+            <li>If no payment is received for 2 additional consecutive months after being placed on hold, the layby account will be cancelled
+              and no refunds will be issued.</li>
+            <li>Cancellation initiated by the customer may result in additional administrative fees.</li>
           </ul>
         </div>
 
@@ -90,22 +94,6 @@
       </div>
 
       <!-- ================= PLACE ORDER BUTTON ================= -->
-      <div class="checkout-form">
-        <h3>Shipping Info</h3>
-        <input v-model="shipping.name" type="text" placeholder="Full Name" />
-        <input v-model="shipping.address" type="text" placeholder="Address" />
-        <input v-model="shipping.email" type="email" placeholder="Email" />
-        <input v-model="shipping.phone" type="tel" placeholder="Phone Number" />
-      </div>
-
-      <h3>Payment Method</h3>
-      <select v-model="paymentMethod">
-        <option value="">Select Payment</option>
-        <option value="card">Credit/Debit Card</option>
-        <option value="paypal">PayPal</option>
-        <option value="eft">EFT</option>
-      </select>
-
       <button @click="placeOrder" class="place-order-btn">
         Place Order
       </button>
@@ -115,13 +103,13 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import router from '@/router'
-import { computed, onMounted, reactive, ref } from 'vue'
 import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
 
 const store = useStore()
+const CHECKOUT_DRAFT_KEY = 'checkoutDraft'
 
 // ================= CART DATA =================
 function getCurrentUserId() {
@@ -143,8 +131,9 @@ const shippingCost = computed(() => store.getters.shippingCost)
 const customsCharges = computed(() => store.getters.customsCharges)
 const totalWithShipping = computed(() => store.getters.totalWithShipping)
 
-onMounted(() => {
-  store.dispatch('fetchCart', getCurrentUserId())
+onMounted(async () => {
+  await store.dispatch('fetchCart', getCurrentUserId())
+  loadCheckoutDraft()
 })
 
 // ================= SHIPPING FORM =================
@@ -161,6 +150,79 @@ const paymentMethod = ref('')
 // ================= LAYBY STATE =================
 const acceptedTerms = ref(false)
 const laybyError = ref(false)
+
+function getCartSignature(items) {
+  return (items || [])
+    .map((item) => `${item.product_id ?? item.product_Id ?? item.id}:${Number(item.quantity) || 0}`)
+    .sort()
+    .join('|')
+}
+
+const cartSignature = computed(() => getCartSignature(cart.value))
+
+function resetCheckoutState() {
+  shipping.name = ''
+  shipping.address = ''
+  shipping.email = ''
+  shipping.phone = ''
+  paymentMethod.value = ''
+  acceptedTerms.value = false
+  laybyError.value = false
+}
+
+function saveCheckoutDraft() {
+  const draft = {
+    shipping: { ...shipping },
+    paymentMethod: paymentMethod.value,
+    acceptedTerms: acceptedTerms.value,
+    cartSignature: cartSignature.value
+  }
+  sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft))
+}
+
+function loadCheckoutDraft() {
+  const raw = sessionStorage.getItem(CHECKOUT_DRAFT_KEY)
+  if (!raw) return
+
+  try {
+    const draft = JSON.parse(raw)
+    if (draft?.cartSignature !== cartSignature.value) {
+      sessionStorage.removeItem(CHECKOUT_DRAFT_KEY)
+      resetCheckoutState()
+      return
+    }
+    if (draft?.shipping) {
+      shipping.name = draft.shipping.name || ''
+      shipping.address = draft.shipping.address || ''
+      shipping.email = draft.shipping.email || ''
+      shipping.phone = draft.shipping.phone || ''
+    }
+    paymentMethod.value = draft?.paymentMethod || ''
+    acceptedTerms.value = Boolean(draft?.acceptedTerms)
+  } catch (error) {
+    console.error('Failed to parse checkout draft:', error)
+  }
+}
+
+watch(shipping, saveCheckoutDraft, { deep: true })
+watch(paymentMethod, saveCheckoutDraft)
+watch(acceptedTerms, saveCheckoutDraft)
+watch(cartSignature, (nextSignature, prevSignature) => {
+  if (typeof prevSignature === 'undefined') return
+  const raw = sessionStorage.getItem(CHECKOUT_DRAFT_KEY)
+  if (!raw) return
+
+  try {
+    const draft = JSON.parse(raw)
+    if (draft?.cartSignature !== nextSignature) {
+      sessionStorage.removeItem(CHECKOUT_DRAFT_KEY)
+      resetCheckoutState()
+    }
+  } catch {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY)
+    resetCheckoutState()
+  }
+})
 
 // ================= PLACE ORDER FUNCTION =================
 function placeOrder() {
@@ -328,7 +390,7 @@ function placeOrder() {
   display: block;
   margin: 20px auto 0;
   padding: 10px 16px;
-  background-color: #159a9a;
+  background-color: blue;
   color: rgb(255, 255, 255);
   border: none;
   border-radius: 6px;
