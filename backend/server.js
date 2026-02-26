@@ -42,12 +42,7 @@ app.get('/cart/:userId', async (req, res) => {
     const userId = req.params.userId;
 
     const [rows] = await pool.query(
-      `SELECT 
-         c.id,
-         c.product_id,
-         c.quantity,
-         p.name,
-         p.price
+      `SELECT c.id, c.product_id, c.quantity, p.name, p.price AS price
        FROM cart_items c
        JOIN products p ON c.product_id = p.product_id
        WHERE c.user_id = ?`,
@@ -71,9 +66,11 @@ app.post('/cart', async (req, res) => {
     );
 
     if (existingCart.length > 0) {
+      const currentQty = Number(existingCart[0].quantity) || 1;
+      const nextQty = Math.min(20, currentQty + 1);
       await pool.query(
-        'UPDATE cart_items SET quantity = quantity + 1 WHERE user_id = ? AND product_id = ?',
-        [user_Id, product_Id]
+        'UPDATE cart_items SET quantity = ? WHERE user_id = ? AND product_id = ?',
+        [nextQty, user_Id, product_Id]
       );
     } else {
       await pool.query(
@@ -93,9 +90,16 @@ app.post('/cart', async (req, res) => {
 app.patch('/cart', async (req, res) => {
   try {
     const { user_Id, product_Id, quantity } = req.body;
+    const parsedQty = Number(quantity);
+
+    if (!Number.isInteger(parsedQty)) {
+      return res.status(400).json({ message: 'Quantity must be an integer.' });
+    }
+
+    const safeQty = Math.min(10, Math.max(1, parsedQty));
     await pool.query(
       'UPDATE cart_items SET quantity = ? WHERE user_id = ? AND product_id = ?',
-      [quantity, user_Id, product_Id]
+      [safeQty, user_Id, product_Id]
     );
     res.json({ message: 'Quantity updated' });
   } catch (error) {

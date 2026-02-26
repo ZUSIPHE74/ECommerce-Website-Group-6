@@ -10,10 +10,26 @@
       <article v-for="item in cart" :key="item.id" class="item">
         <div>
           <h3>{{ item.name }}</h3>
-          <p>{{ formatMoney(item.price) }} x {{ item.quantity }}</p>
+          <p>{{ formatMoney(item.price) }} each</p>
         </div>
 
         <div class="item-actions">
+          <label class="quantity-control">
+            Qty:
+            <select
+              :value="Number(item.quantity)"
+              @change="updateItemQuantity(item.product_id, Number($event.target.value))"
+            >
+              <option
+                v-for="qty in quantityOptions"
+                :key="qty"
+                :value="qty"
+              >
+                {{ qty }}
+              </option>
+            </select>
+          </label>
+
           <strong>
             {{ formatMoney(Number(item.price) * Number(item.quantity)) }}
           </strong>
@@ -86,6 +102,7 @@ const cart = computed(() => store.state.Cart || [])
 const cartCount = computed(() => store.getters.cartCount || 0)
 const cartTotal = computed(() => store.getters.cartTotal || 0)
 const showClearConfirm = ref(false)
+const quantityOptions = Array.from({ length: 20 }, (_, i) => i + 1)
 
 // Fetch cart on load
 onMounted(() => {
@@ -103,6 +120,18 @@ function removeItem(item) {
   store.dispatch('removeFromCart', {
     user_Id: resolvedUserId,
     product_Id: productId
+  })
+}
+
+// Update quantity for an item (1 to 20)
+function updateItemQuantity(productId, quantity) {
+  const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
+  const safeQuantity = Math.min(20, Math.max(1, Number(quantity) || 1))
+
+  store.dispatch('updateQuantity', {
+    user_Id: resolvedUserId,
+    product_Id: productId,
+    quantity: safeQuantity
   })
 }
 
@@ -161,6 +190,24 @@ async function clearCart() {
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: white;
+}
+
+.quantity-control select {
+  padding: 4px 8px;
+  border: 1px solid #00ffff;
+  border-radius: 4px;
+  background: #00ffff;
+  color: #0f172a;
+  font-size: 12px;
+  line-height: 1.1;
 }
 
 .remove-btn {
