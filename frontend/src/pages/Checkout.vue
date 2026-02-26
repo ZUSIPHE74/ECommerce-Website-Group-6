@@ -3,11 +3,17 @@
     <h2>Checkout</h2>
 
     <!-- Show if cart is empty -->
-    <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
+    <p v-if="cart.length === 0" class="empty">
+      Your cart is empty.
+    </p>
 
     <div v-else>
       <!-- Display cart items -->
-      <div v-for="items in cart" :key="items.id" class="checkout-item">
+      <div
+        v-for="items in cart"
+        :key="items.id"
+        class="checkout-item"
+      >
         <p>{{ items.name }} x {{ items.quantity }}</p>
         <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
       </div>
@@ -40,7 +46,6 @@
           <span>Instant EFT (Auto)</span>
         </label>
 
-        <!-- LAYBY OPTION (Only for expensive orders ≥ 2000) -->
         <label 
           v-if="Number(totalWithShipping) >= 2000"
           class="payment-option"
@@ -54,7 +59,6 @@
       <!-- ================= LAYBY SECTION ================= -->
       <div v-if="paymentMethod === 'layby'" class="layby-terms">
 
-        <!-- How Layby Works Box -->
         <div class="layby-info">
           <h4>How Layby Works</h4>
           <ul>
@@ -66,7 +70,6 @@
           </ul>
         </div>
 
-        <!-- Terms & Conditions Checkbox -->
         <div class="layby-checkbox">
           <input type="checkbox" v-model="acceptedTerms" />
           <label>
@@ -74,7 +77,6 @@
           </label>
         </div>
 
-        <!-- Error Message -->
         <p v-if="laybyError" class="error-msg">
           Have you read the Terms & Conditions? Please confirm before continuing.
         </p>
@@ -83,22 +85,6 @@
 
       <!-- ================= ORDER SUMMARY ================= -->
       <div class="checkout-summary payment-summary">
-    <p v-if="cart.length === 0" class="empty">
-      Your cart is empty.
-    </p>
-
-    <div v-else>
-
-      <div
-        v-for="items in cart"
-        :key="items.id"
-        class="checkout-item"
-      >
-        <p>{{ items.name }} x {{ items.quantity }}</p>
-        <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
-      </div>
-
-      <div class="checkout-summary">
         <p>Subtotal: {{ formatMoney(Number(cartTotal)) }}</p>
         <p>Shipping: {{ formatMoney(shippingCost) }}</p>
         <p>Import Charges: {{ formatMoney(customsCharges) }}</p>
@@ -106,22 +92,6 @@
       </div>
 
       <!-- ================= PLACE ORDER BUTTON ================= -->
-      <div class="checkout-form">
-        <h3>Shipping Info</h3>
-        <input v-model="shipping.name" type="text" placeholder="Full Name" />
-        <input v-model="shipping.address" type="text" placeholder="Address" />
-        <input v-model="shipping.email" type="email" placeholder="Email" />
-        <input v-model="shipping.phone" type="tel" placeholder="Phone Number" />
-      </div>
-
-      <h3>Payment Method</h3>
-      <select v-model="paymentMethod">
-        <option value="">Select Payment</option>
-        <option value="card">Credit/Debit Card</option>
-        <option value="paypal">PayPal</option>
-        <option value="eft">EFT</option>
-      </select>
-
       <button @click="placeOrder" class="place-order-btn">
         Place Order
       </button>
@@ -129,6 +99,7 @@
     </div>
   </section>
 </template>
+
 
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
