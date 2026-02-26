@@ -14,21 +14,21 @@ import Profile from '../pages/Profile.vue'
 import ProfileDashboard from '../pages/ProfileDashboard.vue'
 
 const routes = [
-  { path: '/', component: Home },
-  { path: '/about', component: About },
-  { path: '/shop', component: Shop },
-  { path: '/cart', component: Cart },
-  { path: '/checkout', component: Checkout },
-  { path: '/payment', component: Payment },
-  { path: '/order-success', component: OrderSuccess },
+  { path: '/', component: Home, name: 'Home' },
+  { path: '/about', component: About, name: 'About' },
+  { path: '/shop', component: Shop, name: 'Shop' },
+  { path: '/cart', component: Cart, name: 'Cart' },
+  { path: '/checkout', component: Checkout, name: 'Checkout' },
+  { path: '/payment', component: Payment, name: 'Payment' },
+  { path: '/order-success', component: OrderSuccess, name: 'OrderSuccess' },
 
-  { path: '/login', component: Login },
-  { path: '/register', component: Register },
-  { path: '/forgot-password', component: ForgotPassword },
+  { path: '/login', component: Login, name: 'Login' },
+  { path: '/register', component: Register, name: 'Register' },
+  { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
 
-  { path: '/profile', redirect: '/account/profile' },
-  { path: '/account/profile', component: Profile },
-  { path: '/dashboard', component: ProfileDashboard },
+  { path: '/profile', redirect: { name: 'Profile' } },
+  { path: '/account/profile', component: Profile, name: 'Profile' },
+  { path: '/dashboard', component: ProfileDashboard, name: 'Dashboard' },
 
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]

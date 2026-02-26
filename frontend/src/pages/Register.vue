@@ -142,41 +142,51 @@ export default {
       }
     },
     async handleRegister() {
-      try {
-        this.error = '';
-        if (!this.country_id) {
-          this.error = 'Please select your country.';
-          return;
-        }
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        const data = await postWithFallback('/api/auth/register', {
-          full_name: this.full_name,
-          email: this.email,
-          password: this.password,
-          country_id: this.country_id ? Number(this.country_id) : null,
-          currency_code: this.currency_code,
-          gender: this.gender,
-          referral_source: this.referral_source,
-          security_question: this.security_question,
-          security_answer: this.security_answer
-        });
-
-        if (!data?.token || !data?.user) {
-          throw new Error('Registration succeeded but response was incomplete.');
-        }
-
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        if (data?.user?.currency_code) {
-          localStorage.setItem('currency_code', data.user.currency_code);
-        }
-
-        this.$router.push('/account/profile');
-      } catch (err) {
-        this.error = err?.message ? `Registration failed (${err.message})` : 'Unable to reach server. Please try again.';
-      }
+  try {
+    this.error = '';
+    
+    if (!this.country_id) {
+      this.error = 'Please select your country.';
+      return;
     }
+    
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    const data = await postWithFallback('/api/auth/register', {
+      full_name: this.full_name,
+      email: this.email,
+      password: this.password,
+      country_id: this.country_id ? Number(this.country_id) : null,
+      currency_code: this.currency_code,
+      gender: this.gender,
+      referral_source: this.referral_source,
+      security_question: this.security_question,
+      security_answer: this.security_answer
+    });
+
+    if (!data?.token || !data?.user) {
+      throw new Error('Registration succeeded but response was incomplete.');
+    }
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    if (data?.user?.currency_code) {
+      localStorage.setItem('currency_code', data.user.currency_code);
+    }
+
+    this.$router.push('/account/profile');
+  } catch (err) {
+    console.error('Registration error:', err);
+    
+    // Handle specific error messages
+    if (err.message.includes('500') || err.message.includes('Duplicate entry')) {
+      this.error = 'Registration failed: This email or information may already be registered.';
+    } else {
+      this.error = err?.message ? `Registration failed (${err.message})` : 'Unable to reach server. Please try again.';
+    }
+  }
+}
   }
 }
 </script>
