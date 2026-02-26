@@ -60,13 +60,17 @@
       <div v-if="paymentMethod === 'layby'" class="layby-terms">
 
         <div class="layby-info">
+          <h3>Terms and Conditions</h3>
           <h4>How Layby Works</h4>
           <ul>
-            <li>A 20% deposit is required to secure your order.</li>
-            <li>The remaining balance must be paid within 3 months.</li>
+            <li>A 20% non-refundable deposit is required to secure your order.</li>
+            <li>Customers may choose a 12-month or 24-month layby contract</li>
+            <li>The remaining balance will be debited monthly according to contract term.</li>
             <li>No delivery will be made until full payment is received.</li>
-            <li>If payments are missed, the order may be cancelled.</li>
-            <li>Cancellation may result in a 10% admin fee deduction.</li>
+            <li>If payments are missed for 3 consecutive months, the layby account will be placed on hold.</li>
+            <li>If no payment is received for 2 additional consecutive months after being placed on hold, the layby account will be cancelled
+              and no refunds will be issued.</li>
+            <li>Cancellation initiated by the customer may result in additional administrative fees.</li>
           </ul>
         </div>
 
@@ -147,6 +151,79 @@ const paymentMethod = ref('')
 // ================= LAYBY STATE =================
 const acceptedTerms = ref(false)
 const laybyError = ref(false)
+
+function getCartSignature(items) {
+  return (items || [])
+    .map((item) => `${item.product_id ?? item.product_Id ?? item.id}:${Number(item.quantity) || 0}`)
+    .sort()
+    .join('|')
+}
+
+const cartSignature = computed(() => getCartSignature(cart.value))
+
+function resetCheckoutState() {
+  shipping.name = ''
+  shipping.address = ''
+  shipping.email = ''
+  shipping.phone = ''
+  paymentMethod.value = ''
+  acceptedTerms.value = false
+  laybyError.value = false
+}
+
+function saveCheckoutDraft() {
+  const draft = {
+    shipping: { ...shipping },
+    paymentMethod: paymentMethod.value,
+    acceptedTerms: acceptedTerms.value,
+    cartSignature: cartSignature.value
+  }
+  sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft))
+}
+
+function loadCheckoutDraft() {
+  const raw = sessionStorage.getItem(CHECKOUT_DRAFT_KEY)
+  if (!raw) return
+
+  try {
+    const draft = JSON.parse(raw)
+    if (draft?.cartSignature !== cartSignature.value) {
+      sessionStorage.removeItem(CHECKOUT_DRAFT_KEY)
+      resetCheckoutState()
+      return
+    }
+    if (draft?.shipping) {
+      shipping.name = draft.shipping.name || ''
+      shipping.address = draft.shipping.address || ''
+      shipping.email = draft.shipping.email || ''
+      shipping.phone = draft.shipping.phone || ''
+    }
+    paymentMethod.value = draft?.paymentMethod || ''
+    acceptedTerms.value = Boolean(draft?.acceptedTerms)
+  } catch (error) {
+    console.error('Failed to parse checkout draft:', error)
+  }
+}
+
+watch(shipping, saveCheckoutDraft, { deep: true })
+watch(paymentMethod, saveCheckoutDraft)
+watch(acceptedTerms, saveCheckoutDraft)
+watch(cartSignature, (nextSignature, prevSignature) => {
+  if (typeof prevSignature === 'undefined') return
+  const raw = sessionStorage.getItem(CHECKOUT_DRAFT_KEY)
+  if (!raw) return
+
+  try {
+    const draft = JSON.parse(raw)
+    if (draft?.cartSignature !== nextSignature) {
+      sessionStorage.removeItem(CHECKOUT_DRAFT_KEY)
+      resetCheckoutState()
+    }
+  } catch {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY)
+    resetCheckoutState()
+  }
+})
 
 // ================= PLACE ORDER FUNCTION =================
 function placeOrder() {
