@@ -26,9 +26,10 @@ const routes = [
   { path: '/register', component: Register, name: 'Register' },
   { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },
 
-  { path: '/profile', redirect: { name: 'Profile' } },
-  { path: '/account/profile', component: Profile, name: 'Profile' },
-  { path: '/dashboard', component: ProfileDashboard, name: 'Dashboard' },
+  { path: '/profile', redirect: '/account/profile' },
+  { path: '/account/profile', component: Profile },
+  { path: '/dashboard', component: ProfileDashboard },
+  { path: '/account/dashboard', redirect: '/dashboard' },
 
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]

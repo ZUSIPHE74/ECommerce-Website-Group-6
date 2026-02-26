@@ -3,11 +3,17 @@
     <h2>Checkout</h2>
 
     <!-- Show if cart is empty -->
-    <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
+    <p v-if="cart.length === 0" class="empty">
+      Your cart is empty.
+    </p>
 
     <div v-else>
       <!-- Display cart items -->
-      <div v-for="items in cart" :key="items.id" class="checkout-item">
+      <div
+        v-for="items in cart"
+        :key="items.id"
+        class="checkout-item"
+      >
         <p>{{ items.name }} x {{ items.quantity }}</p>
         <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
       </div>
@@ -40,7 +46,6 @@
           <span>Instant EFT (Auto)</span>
         </label>
 
-        <!-- LAYBY OPTION (Only for expensive orders ≥ 2000) -->
         <label 
           v-if="Number(totalWithShipping) >= 2000"
           class="payment-option"
@@ -54,7 +59,6 @@
       <!-- ================= LAYBY SECTION ================= -->
       <div v-if="paymentMethod === 'layby'" class="layby-terms">
 
-        <!-- How Layby Works Box -->
         <div class="layby-info">
           <h4>How Layby Works</h4>
           <ul>
@@ -66,7 +70,6 @@
           </ul>
         </div>
 
-        <!-- Terms & Conditions Checkbox -->
         <div class="layby-checkbox">
           <input type="checkbox" v-model="acceptedTerms" />
           <label>
@@ -74,7 +77,6 @@
           </label>
         </div>
 
-        <!-- Error Message -->
         <p v-if="laybyError" class="error-msg">
           Have you read the Terms & Conditions? Please confirm before continuing.
         </p>
@@ -98,16 +100,29 @@
   </section>
 </template>
 
+
 <script setup>
+import { reactive, ref, computed, onMounted } from 'vue'
 import router from '@/router'
-import { computed, onMounted, reactive, ref } from 'vue'
 import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
 
 const store = useStore()
-const userId = Number(localStorage.getItem('userId')) || 1
 
 // ================= CART DATA =================
+function getCurrentUserId() {
+  const storedUser = localStorage.getItem('user')
+  if (storedUser) {
+    try {
+      const parsedUser = JSON.parse(storedUser)
+      if (parsedUser?.id) return Number(parsedUser.id)
+    } catch (error) {
+      console.error('Failed to parse stored user:', error)
+    }
+  }
+  return Number(localStorage.getItem('userId')) || 1
+}
+
 const cart = computed(() => store.state.Cart || [])
 const cartTotal = computed(() => store.getters.cartTotal)
 const shippingCost = computed(() => store.getters.shippingCost)
@@ -115,7 +130,7 @@ const customsCharges = computed(() => store.getters.customsCharges)
 const totalWithShipping = computed(() => store.getters.totalWithShipping)
 
 onMounted(() => {
-  store.dispatch('fetchCart', userId)
+  store.dispatch('fetchCart', getCurrentUserId())
 })
 
 // ================= SHIPPING FORM =================
@@ -299,15 +314,15 @@ function placeOrder() {
   display: block;
   margin: 20px auto 0;
   padding: 10px 16px;
-  background-color: #1e40af;
-  color: white;
+  background-color: #159a9a;
+  color: rgb(255, 255, 255);
   border: none;
   border-radius: 6px;
   cursor: pointer;
 }
 
 .place-order-btn:hover {
-  background-color: #1e3a8a;
+  background-color: #5071cb;
 }
 
 .empty {

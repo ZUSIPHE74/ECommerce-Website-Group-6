@@ -91,6 +91,7 @@ watch(
 const logout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
+  localStorage.removeItem('userId')
   isLoggedIn.value = false
   router.push('/login')
 }
