@@ -169,11 +169,12 @@ export default {
       throw new Error('Registration succeeded but response was incomplete.');
     }
 
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    if (data?.user?.currency_code) {
-      localStorage.setItem('currency_code', data.user.currency_code);
-    }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        if (data?.user?.currency_code) {
+          localStorage.setItem('currency_code', data.user.currency_code);
+        }
+        localStorage.setItem('userId', String(data.user.id));
 
     this.$router.push('/account/profile');
   } catch (err) {

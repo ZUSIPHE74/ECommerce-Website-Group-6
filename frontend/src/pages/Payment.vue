@@ -38,10 +38,30 @@
 
       <!-- ================= EFT ================= -->
       <div v-else-if="checkoutData.paymentMethod === 'eft'" class="form">
-        <p class="hint">
-          Instant EFT: choose your bank and continue.
-        </p>
-        <input v-model="eftAuto.bankName" type="text" placeholder="Bank Name" required />
+        <h3 class="bank-title">Instant EFT Details</h3>
+        <input class="eft-field" v-model="eftAuto.accountHolder" type="text" placeholder="Account Holder Name" required />
+        <input class="eft-field" v-model="eftAuto.accountNumber" type="text" placeholder="Account Number" required />
+        <input class="eft-field" v-model="eftAuto.phoneNumber" type="tel" placeholder="Cell Phone (+country code)" required />
+        <input
+          v-if="showEftOtp"
+          class="eft-field"
+          v-model="eftAuto.otp"
+          type="text"
+          maxlength="6"
+          placeholder="One-Time PIN (6 digits)"
+          required
+        />
+        <div v-if="showEftOtp" class="otp-row">
+          <span v-if="!canResendOtp" class="otp-timer">Didn't get OTP? Resend in {{ otpCountdown }}s</span>
+          <button
+            v-else
+            type="button"
+            class="otp-resend-btn"
+            @click="resendOtp"
+          >
+            Resend OTP
+          </button>
+        </div>
       </div>
 
       <!-- ================= LAYBY ================= -->
@@ -93,28 +113,33 @@
 
         <!-- Bank Details for Auto-Debit -->
          <div class="layby-bank-details"> 
-          <h4>Bank Details for Auto-Debit</h4>
-          <input v-model="laybyBank.name" type="text" placeholder="Bank Name" required />
+          <h4>Auto-Debit Details</h4>
+          <input v-model="laybyBank.accountHolder" type="text" placeholder="Account Holder Name" required />
           <input v-model="laybyBank.accountNumber" type="text" placeholder="Account Number" required />
-          <input v-model="laybyBank.branchCode" type="text" placeholder="Branch Code" required />
+          <input v-model="laybyBank.phoneNumber" type="tel" placeholder="Cell Phone (+country code)" required />
          </div>
 
       </div>
 
       <!-- BUTTON -->
-      <button class="pay-btn" @click="completePayment">
-        {{ checkoutData.paymentMethod === 'layby'
-            ? 'Pay Deposit & Start Layby'
-            : 'Pay Now'
-        }}
+      <button class="pay-btn" :disabled="eftProcessing" @click="completePayment">
+        {{ paymentButtonLabel }}
       </button>
+
+      <div v-if="showOtpPopup" class="otp-popup-overlay" @click="closeOtpPopup">
+        <div class="otp-popup" @click.stop>
+          <h4>Invalid OTP</h4>
+          <p>{{ otpPopupMessage }}</p>
+          <button type="button" class="otp-popup-btn" @click="closeOtpPopup">OK</button>
+        </div>
+      </div>
 
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
@@ -139,13 +164,21 @@ const paypal = reactive({
 })
 
 const eftAuto = reactive({
-  bankName: ''
+  accountHolder: '',
+  accountNumber: '',
+  phoneNumber: '',
+  otp: ''
 })
+const eftProcessing = ref(false)
+const otpCountdown = ref(15)
+const showOtpPopup = ref(false)
+const otpPopupMessage = ref('')
+let otpTimer = null
 
 const laybyBank = reactive({
-  name: '',
+  accountHolder: '',
   accountNumber: '',
-  branchCode: ''
+  phoneNumber: ''
 })
 
 // ================= LAYBY CALCULATIONS =================
@@ -177,8 +210,67 @@ const paymentMethodLabel = computed(() => {
   return 'Payment'
 })
 
+const paymentButtonLabel = computed(() => {
+  if (!checkoutData) return 'Pay Now'
+  if (checkoutData.paymentMethod === 'layby') return 'Pay Deposit & Start Layby'
+  if (checkoutData.paymentMethod !== 'eft') return 'Pay Now'
+  return eftProcessing.value ? 'Processing...' : 'Pay Now'
+})
+
+const showEftOtp = computed(() => {
+  const digits = (eftAuto.phoneNumber || '').replace(/\D/g, '')
+  return digits.length >= 8 && digits.length <= 15
+})
+
+const canResendOtp = computed(() => showEftOtp.value && otpCountdown.value === 0)
+
+function startOtpCountdown() {
+  if (otpTimer) clearInterval(otpTimer)
+  otpCountdown.value = 15
+  otpTimer = setInterval(() => {
+    if (otpCountdown.value > 0) {
+      otpCountdown.value -= 1
+    } else {
+      clearInterval(otpTimer)
+      otpTimer = null
+    }
+  }, 1000)
+}
+
+function resendOtp() {
+  if (!canResendOtp.value) return
+  eftAuto.otp = ''
+  startOtpCountdown()
+}
+
+function openOtpPopup(message) {
+  otpPopupMessage.value = message
+  showOtpPopup.value = true
+}
+
+function closeOtpPopup() {
+  showOtpPopup.value = false
+}
+
+watch(showEftOtp, (enabled) => {
+  if (enabled) {
+    if (!otpTimer && otpCountdown.value === 15) startOtpCountdown()
+    return
+  }
+  if (otpTimer) {
+    clearInterval(otpTimer)
+    otpTimer = null
+  }
+  otpCountdown.value = 15
+  eftAuto.otp = ''
+})
+
+onBeforeUnmount(() => {
+  if (otpTimer) clearInterval(otpTimer)
+})
+
 // ================= COMPLETE PAYMENT =================
-function completePayment() {
+async function completePayment() {
   if (!checkoutData) {
     router.push('/checkout')
     return
@@ -186,37 +278,76 @@ function completePayment() {
 
   // CARD VALIDATION
   if (checkoutData.paymentMethod === 'card') {
-    if (!card.number.trim() || !card.expiry.trim() || !card.cvc.trim()) {
-      alert('Field required: card number, expiry date, and CVV.')
+    const cardDigits = (card.number || '').replace(/\D/g, '')
+    const cvcDigits = (card.cvc || '').replace(/\D/g, '')
+    if (!card.name.trim() || !card.expiry.trim() || !cardDigits) {
+      alert('Field required: card holder name, card number, and expiry date.')
+      return
+    }
+    if (cardDigits.length < 12 || cardDigits.length > 19) {
+      alert('Enter a valid card number.')
+      return
+    }
+    if (!/^[0-9]{2}\/[0-9]{2}$/.test(card.expiry.trim())) {
+      alert('Enter expiry in MM/YY format.')
+      return
+    }
+    if (cvcDigits.length < 3 || cvcDigits.length > 4) {
+      alert('Enter a valid card security code.')
       return
     }
   }
 
   // PAYPAL VALIDATION
   if (checkoutData.paymentMethod === 'paypal') {
-    if (!paypal.email.trim()) {
+    const email = (paypal.email || '').trim()
+    if (!email) {
       alert('Field required: PayPal email.')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Enter a valid PayPal email address.')
       return
     }
   }
 
   // EFT VALIDATION
   if (checkoutData.paymentMethod === 'eft') {
-    if (!eftAuto.bankName.trim()) {
-      alert('Field required: bank name for Instant EFT.')
+    if (!eftAuto.accountHolder.trim() || !eftAuto.accountNumber.trim() || !eftAuto.phoneNumber.trim()) {
+      alert('Field required: account holder, account number, and cell phone for Instant EFT.')
       return
     }
+
+    if (!showEftOtp.value) {
+      alert('Enter a valid international cell phone number (8-15 digits).')
+      return
+    }
+
+    if (!/^[0-9]{6}$/.test((eftAuto.otp || '').trim())) {
+      openOtpPopup('Enter a valid 6-digit OTP.')
+      return
+    }
+
+    eftProcessing.value = true
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+    eftProcessing.value = false
   }
 
   // LAYBY VALIDATION
   if (checkoutData.paymentMethod === 'layby') {
-    if (!laybyBank.name.trim() || !laybyBank.accountNumber.trim() || !laybyBank.branchCode.trim()) {
-      alert('Field required: bank details for Layby auto-debit.')
+    const laybyPhoneDigits = (laybyBank.phoneNumber || '').replace(/\D/g, '')
+    if (!laybyBank.accountHolder.trim() || !laybyBank.accountNumber.trim() || !laybyBank.phoneNumber.trim()) {
+      alert('Field required: account holder, account number, and cell phone for Layby.')
+      return
+    }
+    if (laybyPhoneDigits.length < 8 || laybyPhoneDigits.length > 15) {
+      alert('Enter a valid international cell phone number (8-15 digits) for Layby.')
       return
     }
   }
 
-    // Store Layby info
+  // Store payment outcome
+  if (checkoutData.paymentMethod === 'layby') {
     const laybyInfo = {
       depositPaid: depositAmount.value,
       contractMonths: laybyMonths.value,
@@ -227,14 +358,14 @@ function completePayment() {
 
     sessionStorage.setItem('orderPaymentStatus', 'Layby Started - Deposit Paid')
     sessionStorage.setItem('laybyInfo', JSON.stringify(laybyInfo))
-    if (checkoutData.paymentMethod !== 'layby') {
+  } else {
     sessionStorage.setItem('orderPaymentStatus', 'Payment Received')
-    }
+  }
 
-    sessionStorage.setItem('orderPaymentMethod', paymentMethodLabel.value)
+  sessionStorage.setItem('orderPaymentMethod', paymentMethodLabel.value)
 
-    const userId = Number(localStorage.getItem('userId')) || 1
-    store.dispatch('clearCart', userId)
+  const userId = Number(localStorage.getItem('userId')) || 1
+  store.dispatch('clearCart', userId)
 
   sessionStorage.removeItem('pendingCheckout')
   router.push('/order-success')
@@ -265,6 +396,109 @@ function formatExpiry(event) {
   border-radius: 8px;
   padding: 14px;
   background: #111827;
+}
+
+.summary p {
+  font-size: 18px;
+  line-height: 1.35;
+  margin: 0 0 8px;
+}
+
+.hint {
+  font-size: 18px;
+  line-height: 1.35;
+  margin: 10px 0 12px;
+}
+
+.bank-title {
+  margin: 12px 0 10px;
+  font-size: 24px;
+}
+
+.eft-field {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.eft-field:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
+}
+
+.otp-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin: -2px 0 8px;
+}
+
+.otp-timer {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.otp-resend-btn {
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.otp-resend-btn:hover {
+  border-color: #00ffff;
+  color: #00ffff;
+}
+
+.otp-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.7);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+
+.otp-popup {
+  width: min(420px, calc(100vw - 28px));
+  border: 1px solid #00ffff;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.otp-popup h4 {
+  margin: 0 0 8px;
+  color: #00ffff;
+}
+
+.otp-popup p {
+  margin: 0 0 12px;
+}
+
+.otp-popup-btn {
+  display: inline-block;
+  border: 1px solid #1e40af;
+  border-radius: 6px;
+  background: #1e40af;
+  color: #fff;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.otp-popup-btn:hover {
+  background: #1e3a8a;
 }
 
 .layby-box {
@@ -372,6 +606,11 @@ function formatExpiry(event) {
   background: #1e40af;
   color: #fff;
   cursor: pointer;
+}
+
+.pay-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .pay-btn:hover {

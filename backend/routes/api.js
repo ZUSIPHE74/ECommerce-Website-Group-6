@@ -37,6 +37,7 @@ router.get('/currencies', loginController.getCurrencies);
 router.post('/orders', authMiddleware, createOrder);
 router.post('/contact', submitContact);
 router.post('/create-checkout-session', authMiddleware, createCheckoutSession);
+// Test route
 router.get('/', (req, res) => {
   res.json({ message: "Welcome to the E-commerce API" });
 });
