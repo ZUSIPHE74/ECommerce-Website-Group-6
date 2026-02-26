@@ -1,14 +1,14 @@
 import mysql from 'mysql2/promise';
 
 (async () => {
-    const passwords = ['password', 'root', 'admin', '123456'];
+    const passwords = ['', 'password', 'root', 'admin', '123456'];
     for (const p of passwords) {
         try {
             console.log(`Trying password: '${p}'...`);
             const conn = await mysql.createConnection({
                 host: 'localhost',
                 user: 'root',
-                password: '',
+                password: p,
                 database: 'ecommerce_db'
             });
             console.log(`SUCCESS! Password is: '${p}'`);

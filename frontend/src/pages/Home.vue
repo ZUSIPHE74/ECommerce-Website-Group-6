@@ -45,13 +45,13 @@ const router = useRouter()
 
 // Add your generated product images here
 const images = ref([
-  'https://path-to-your-luggage-image.jpg',
-  'https://path-to-your-headset-image.jpg',
-  'https://path-to-your-backpack-image.jpg'
+  'https://images.unsplash.com/photo-1685388180103-9b01db9d8521?q=80&w=701&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'https://images.unsplash.com/photo-1684503830891-27e71ff697e3?q=80&w=701&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'https://images.unsplash.com/photo-1684503830683-108f3e0fd03f?q=80&w=701&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
 ])
 
 const currentIndex = ref(0)
-const currentImage = computed(() => images.value[currentIndex.ref])
+const currentImage = computed(() => images.value[currentIndex.value])
 
 // Automatic Slider Logic
 onMounted(() => {

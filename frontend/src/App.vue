@@ -1,7 +1,9 @@
 <template>
   <div class="app-wrapper">
     <header class="navbar">
-      <h2 class="logo">ARC<span>TRAVEL</span></h2>
+      <RouterLink to="/" class="logo-link">
+        <h2 class="logo">ARC<span>TRAVEL</span></h2>
+      </RouterLink>
 
       <nav class="nav-icons">
         <RouterLink to="/shop">
@@ -12,9 +14,20 @@
           <ShoppingCart size="20" />
         </RouterLink>
 
-        <RouterLink to="/currency">
-          <Globe size="20" />
-        </RouterLink>
+      <div class="currency-wrapper" @click.stop="toggleDropdown">
+        <Globe size="20" />
+  
+      <div v-if="showDropdown" class="currency-dropdown">
+        <div 
+          v-for="country in countries" 
+          :key="country.id"
+          class="currency-item"
+          @click="selectCurrency(country)"
+        >
+      {{ country.country_name }} — {{ country.currency_code }}
+    </div>
+  </div>
+</div>
 
         <RouterLink v-if="!isLoggedIn" to="/login">
           <User size="20" />
@@ -43,12 +56,30 @@
 </template>
 <script setup>
 import { RouterLink, RouterView, useRouter } from 'vue-router'
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { ShoppingCart, User, Globe , ShoppingBag } from 'lucide-vue-next'
+import countries from './utils/countries.js'
 
 const router = useRouter()
 
 const isLoggedIn = ref(!!localStorage.getItem('token'))
+const showDropdown = ref(false)
+
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value
+}
+
+const selectCurrency = (country) => {
+  localStorage.setItem('currency_code', country.currency_code)
+  showDropdown.value = false
+  window.location.reload() // quick way to refresh prices
+}
+
+onMounted(() => {
+  document.addEventListener('click', () => {
+    showDropdown.value = false
+  })
+})
 
 watch(
   () => router.currentRoute.value.path,
@@ -66,6 +97,14 @@ const logout = () => {
 </script>
 
 <style scoped>
+.logo-link {
+  text-decoration: none;
+}
+
+.logo-link:hover .logo {
+  color: #00ffff;
+  transition: 0.3s;
+}
 /* 1. The Stealth Background */
 .app-wrapper {
   background-color: #121212; /* Stealth Deep Grey */
@@ -84,7 +123,36 @@ const logout = () => {
   top: 0;
   z-index: 1000;
 }
+.currency-wrapper {
+  position: relative;
+  cursor: pointer;
+}
 
+.currency-dropdown {
+  position: absolute;
+  right: 0;
+  top: 35px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  width: 240px;
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index: 2000;
+}
+
+.currency-item {
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.currency-item:hover {
+  background: #00ffff20;
+  color: #00ffff;
+}
 /* 2. Logo Styling */
 .logo {
   font-family: 'Inter', sans-serif;

@@ -36,7 +36,8 @@
             </div>
             <div class="form-group">
               <label>Country</label>
-              <select v-model="form.country_id" @change="onCountryChange">
+              <select v-model="form.country_id" @change="onCountryChange" required>
+                <option value="" disabled>Select your country</option>
                 <option v-for="country in countries" :key="country.id" :value="country.id">
                   {{ country.country_name }}
                 </option>
@@ -59,6 +60,8 @@
 </template>
 
 <script>
+import { getWithFallback, putWithFallback } from '../utils/apiRequest'
+
 export default {
   data() {
     return {
@@ -84,30 +87,28 @@ export default {
     }
 
     try {
-      const profileResponse = await fetch('/api/user/profile', {
-        headers: { 'x-auth-token': token }
+      this.user = await getWithFallback('/api/user/profile', {
+        'x-auth-token': token
       });
-      
-      if (!profileResponse.ok) throw new Error('Failed to load profile');
-      
-      this.user = await profileResponse.json();
-      this.form = { ...this.user };
+      localStorage.setItem('user', JSON.stringify(this.user));
     } catch (err) {
       this.logout();
       return;
     }
+    this.form = {
+      full_name: this.user?.full_name || '',
+      email: this.user?.email || '',
+      gender: this.user?.gender || '',
+      country_id: this.user?.country_id ? Number(this.user.country_id) : '',
+      currency_code: this.user?.currency_code || ''
+    };
 
     await this.loadCountries();
   },
   methods: {
     async loadCountries() {
       try {
-        const countriesResponse = await fetch('/api/countries');
-        if (!countriesResponse.ok) {
-          throw new Error(`Failed to load countries (${countriesResponse.status})`);
-        }
-
-        const countries = await countriesResponse.json();
+        const countries = await getWithFallback('/api/countries');
         this.countries = Array.isArray(countries) ? countries : [];
       } catch (err) {
         console.error('Countries load failed:', err);
@@ -125,25 +126,24 @@ export default {
       try {
         this.message = '';
         this.error = '';
+        if (!this.form.country_id) {
+          this.error = 'Please select your country.';
+          return;
+        }
         const token = localStorage.getItem('token');
-        
-        const response = await fetch('/api/user/profile', {
-          method: 'PUT',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-auth-token': token
-          },
-          body: JSON.stringify(this.form)
+
+        await putWithFallback('/api/user/profile', this.form, {
+          'x-auth-token': token
         });
 
-        const data = await response.json();
-        
-        if (!response.ok) throw new Error(data.message);
-        
         this.message = 'Profile updated successfully!';
         this.user = { ...this.user, ...this.form };
+        localStorage.setItem('user', JSON.stringify(this.user));
+        if (this.form?.currency_code) {
+          localStorage.setItem('currency_code', this.form.currency_code);
+        }
       } catch (err) {
-        this.error = err.message;
+        this.error = err?.message || 'Failed to update profile.';
       }
     },
     logout() {
@@ -158,14 +158,19 @@ export default {
 <style scoped>
 .dashboard-container {
   display: flex;
-  min-height: calc(100vh - 80px); 
+  min-height: calc(100vh - 80px);
+  background: #0c0d10;
+  color: #e7e7e7;
+  border: 1px solid #1f2229;
 }
 
 .sidebar {
   width: 250px;
-  border-right: 1px solid #eee;
+  border-right: 1px solid #20242c;
   padding: 40px 20px;
-  background: #f9f9f9;
+  background:
+    linear-gradient(180deg, rgba(0, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 25%),
+    #121418;
 }
 
 .user-info {
@@ -176,14 +181,21 @@ export default {
 .avatar {
   width: 80px;
   height: 80px;
-  background: #000;
-  color: #fff;
+  background: #090a0d;
+  color: #00ffff;
   border-radius: 50%;
+  border: 2px solid #00ffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 32px;
   margin: 0 auto 10px;
+}
+
+.user-info h3 {
+  color: #f3f3f3;
+  font-size: 18px;
+  margin: 10px 0 0;
 }
 
 .sidebar nav button {
@@ -192,21 +204,30 @@ export default {
   padding: 15px;
   text-align: left;
   border: none;
-  background: none;
+  background: transparent;
   cursor: pointer;
   font-size: 16px;
-  border-bottom: 1px solid #eee;
-  transition: 0.2s;
+  border-bottom: 1px solid #20242c;
+  color: #d7d7d7;
+  transition: 0.2s ease;
 }
 
-.sidebar nav button:hover, .sidebar nav button.active {
-  background: #000;
-  color: #fff;
+.sidebar nav button:hover,
+.sidebar nav button.active {
+  background: #07090d;
+  color: #00ffff;
 }
 
 .content {
   flex: 1;
   padding: 40px;
+}
+
+.profile-section h2 {
+  color: #f4f4f4;
+  font-size: 42px;
+  margin: 0 0 24px;
+  letter-spacing: -0.5px;
 }
 
 .form-grid {
@@ -224,16 +245,88 @@ export default {
   display: block;
   margin-bottom: 8px;
   font-size: 14.4px;
-  font-weight: bold;
+  font-weight: 700;
+  color: #efefef;
 }
 
-.form-group input, .form-group select {
+.form-group input,
+.form-group select {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
+  height: 52px;
+  padding: 12px 14px;
+  border: 2px solid #00ffff;
+  border-radius: 999px;
+  background: transparent;
+  color: #e7e7e7;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.form-group select option {
+  background: #1a1d24;
+  color: #e7e7e7;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.15);
+}
+
+.btn {
+  border: none;
+  background: #00ffff;
+  color: #0a0a0c;
+  border-radius: 999px;
+  height: 48px;
+  min-width: 170px;
+  padding: 0 24px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn:hover {
+  filter: brightness(1.06);
+}
+
+.logout-btn {
+  color: #ef6b6b !important;
+}
+
+.logout-btn:hover {
+  color: #fff !important;
+  background: rgba(239, 107, 107, 0.2) !important;
 }
 
 .success-msg { color: green; margin-top: 10px; }
 .error-msg { color: red; margin-top: 10px; }
+
+.placeholder h2,
+.placeholder p {
+  color: #d8d8d8;
+}
+
+@media (max-width: 920px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #20242c;
+    padding: 24px 16px;
+  }
+
+  .content {
+    padding: 24px 16px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 
