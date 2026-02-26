@@ -3,7 +3,7 @@ import pool from '../config/database.js';
 export const getAllProducts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT 
+      SELECT
         p.product_id,
         p.name,
         p.description,
@@ -51,7 +51,7 @@ export const getProductById = async (req, res) => {
     const { id } = req.params;
     
     const [rows] = await pool.query(`
-      SELECT 
+      SELECT
         p.product_id,
         p.name,
         p.description,
@@ -106,7 +106,7 @@ export const getProductsByCategory = async (req, res) => {
     const { category } = req.params;
     
     const [rows] = await pool.query(`
-      SELECT 
+      SELECT
         p.product_id,
         p.name,
         p.description,
@@ -161,7 +161,7 @@ export const searchProducts = async (req, res) => {
     }
 
     const [rows] = await pool.query(`
-      SELECT 
+      SELECT
         p.product_id,
         p.name,
         p.description,
@@ -207,7 +207,7 @@ export const searchProducts = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     const { name, description, price, category_id, stock } = req.body;
-    
+
     // Validate required fields
     if (!name || !description || !price || !category_id) {
       return res.status(400).json({
@@ -243,7 +243,7 @@ export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, price, category_id, stock } = req.body;
-    
+
     const [result] = await pool.query(
       'UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, stock = ? WHERE product_id = ?',
       [name, description, price, category_id, stock, id]
@@ -274,7 +274,7 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const [result] = await pool.query('DELETE FROM products WHERE product_id = ?', [id]);
 
     if (result.affectedRows === 0) {
@@ -302,7 +302,7 @@ export const deleteProduct = async (req, res) => {
 export const getAllCategories = async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT category_id, name FROM categories ORDER BY name');
-    
+
     res.json({
       success: true,
       data: rows
