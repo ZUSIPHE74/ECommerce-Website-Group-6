@@ -42,7 +42,7 @@ app.get('/cart/:userId', async (req, res) => {
     const userId = req.params.userId;
 
     const [rows] = await pool.query(
-      `SELECT c.id, c.product_id, c.quantity, p.name, p.price_usd AS price
+      `SELECT c.id, c.product_id, c.quantity, p.name, p.price AS price
        FROM cart_items c
        JOIN products p ON c.product_id = p.product_id
        WHERE c.user_id = ?`,
