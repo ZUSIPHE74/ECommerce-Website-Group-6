@@ -52,6 +52,37 @@ INSERT INTO `currency_rates` (`currency_code`, `rate_from_usd`) VALUES
 ('NGN', 1500.000000),
 ('KES', 160.000000);
 
+CREATE TABLE `countries` (
+    `country_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `country_name` VARCHAR(100) NOT NULL,
+    `country_code` VARCHAR(10) NOT NULL UNIQUE,
+    `currency_code` VARCHAR(10) NOT NULL,
+    FOREIGN KEY (`currency_code`) REFERENCES `currencies`(`currency_code`)
+);
+
+INSERT INTO `countries` (`country_name`, `country_code`, `currency_code`) VALUES
+('South Africa', 'ZA', 'ZAR'),
+('United States', 'US', 'USD'),
+('United Kingdom', 'GB', 'GBP'),
+('France', 'FR', 'EUR'),
+('Nigeria', 'NG', 'NGN'),
+('Kenya', 'KE', 'KES'),
+('Canada', 'CA', 'CAD'),
+('Australia', 'AU', 'AUD'),
+('Germany', 'DE', 'EUR'),
+('Japan', 'JP', 'JPY'),
+('China', 'CN', 'CNY'),
+('India', 'IN', 'INR'),
+('Brazil', 'BR', 'BRL'),
+('Mexico', 'MX', 'MXN'),
+('Russia', 'RU', 'RUB'),
+('South Korea', 'KR', 'KRW'),
+('Italy', 'IT', 'EUR'),
+('Spain', 'ES', 'EUR'),
+('Egypt', 'EG', 'EGP'),
+('Saudi Arabia', 'SA', 'SAR'),
+('United Arab Emirates', 'AE', 'AED');
+
 -- =====================================
 -- USERS
 -- =====================================
@@ -115,7 +146,7 @@ VALUES (1, 'Horizon S1 Luggage', 'The Horizon S1 is the foundation of the ecosys
        (4, 'Aura T1 Flask Cup', 'The Aura T1 isn\'t just a container; it’s a smart health device. It ensures your beverages are at the exact temperature you desire while maintaining total purity.\n\nOLED Smart Lid: Displays the real-time internal temperature and hydration progress with a single touch.\n\nUV-C Purification: Built-in ultraviolet light in the lid neutralizes 99.9% of bacteria, making water safe anywhere in the world.\n\nTemperature Aura: The base ring pulses Red for hot, Green for ideal, and Cyan for cold.\n\nFind My Flask: Bluetooth and GPS integration ensures you never leave your premium flask behind in a lounge or hotel room.', 750.00, 20),
        (3, 'Zenith Headset', 'The Zenith is the ultimate travel companion for the ears. It is engineered to create a private sanctuary in the middle of a chaotic environment.\n\nWi-Fi 6E Connectivity: Supports standalone high-fidelity streaming and real-time gate/flight updates without needing a phone.\n\nSolar-Filament Headband: Trickle-charges the battery using ambient light from plane windows or terminal sun-decks.\n\nTransparency Glow: The exterior cyan rings pulse when \"Transparency Mode\" is active, signaling to others that you are open to conversation.\n\nBiometric Stress Monitor: Internal sensors track heart rate and suggest guided meditation or noise-cancellation adjustments based on your travel anxiety levels.', 1300.00, 10), 
        (4, 'Zen N1 Neck Pillow', '\r The Zen N1 is engineered to eliminate the \"stiff neck\" associated with long-haul travel. It combines structural support with active recovery technology to provide a spa-like experience at 35,000 feet.\r \r 3D Deep-Tissue Massage: Integrated micro-nodes perform a rhythmic Shiatsu massage to knead out muscle knots and tension.\r \r Graphene Heat Therapy: Carbon-fiber heating elements reach up to 45°C (113°F) to soothe muscles and improve blood circulation.\r \r Smart-Posture Sensor: Gently vibrates if your head slumps into a position that could cause strain, guiding you back to ergonomic alignment.\r \r The Zen Pulse: A central cyan LED ring pulses in sync with your selected massage mode, doubling as a soft ambient light for your immediate space.', 1599.00, 30),
-	     (4, 'Lume E1 Sleep Mask', 'The Lume E1 is a light-therapy visor designed to master your circadian rhythm. It creates a total blackout environment while using controlled light to help your body transition between time zones.\n\nCircadian Light Therapy: Internal LED panels simulate a gradual \"Sunset\" to trigger melatonin or a \"Sunrise\" to wake you up naturally, reducing jet lag.\n\nHaptic Silent Alarm: Instead of audio, the mask uses gentle pulses against your temples to wake you up without disturbing the cabin.\n\nZero-Pressure REM Cavities: Sculpted interior allows your eyes to move freely during deep sleep, preventing pressure on your eyelids or lashes.\n\nLume Status Strip: A sleek cyan LED line on the temple indicates battery life and sync status with the Arc Travel app.', 349.00, 20);
+		   (4, 'Lume E1 Sleep Mask', 'The Lume E1 is a light-therapy visor designed to master your circadian rhythm. It creates a total blackout environment while using controlled light to help your body transition between time zones.\n\nCircadian Light Therapy: Internal LED panels simulate a gradual \"Sunset\" to trigger melatonin or a \"Sunrise\" to wake you up naturally, reducing jet lag.\n\nHaptic Silent Alarm: Instead of audio, the mask uses gentle pulses against your temples to wake you up without disturbing the cabin.\n\nZero-Pressure REM Cavities: Sculpted interior allows your eyes to move freely during deep sleep, preventing pressure on your eyelids or lashes.\n\nLume Status Strip: A sleek cyan LED line on the temple indicates battery life and sync status with the Arc Travel app.', 349.00, 20);
 
 
 -- =====================================
