@@ -49,7 +49,7 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-
+    
     const [rows] = await pool.query(`
       SELECT
         p.product_id,
@@ -104,7 +104,7 @@ export const getProductById = async (req, res) => {
 export const getProductsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
-
+    
     const [rows] = await pool.query(`
       SELECT
         p.product_id,
@@ -152,7 +152,7 @@ export const getProductsByCategory = async (req, res) => {
 export const searchProducts = async (req, res) => {
   try {
     const { q } = req.query;
-
+    
     if (!q) {
       return res.status(400).json({
         success: false,
