@@ -171,6 +171,7 @@ export default {
         if (data?.user?.currency_code) {
           localStorage.setItem('currency_code', data.user.currency_code);
         }
+        localStorage.setItem('userId', String(data.user.id));
 
         this.$router.push('/account/profile');
       } catch (err) {

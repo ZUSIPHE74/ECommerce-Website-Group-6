@@ -72,6 +72,7 @@ export default {
 
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userId', String(data.user.id));
         localStorage.setItem('rememberMe', this.rememberMe ? '1' : '0');
         if (data?.user?.currency_code) {
           localStorage.setItem('currency_code', data.user.currency_code);
@@ -288,4 +289,3 @@ h1 {
   background: #00ffff;
 }
 </style>
-
