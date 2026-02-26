@@ -5,7 +5,7 @@
         <div class="profile-header">
           <div class="avatar-container">
             <div class="avatar-glow"></div>
-            <div class="avatar">{{ user.full_name.charAt(0) }}</div>
+            <div class="avatar">{{ user?.full_name?.charAt(0) || 'U' }}</div>
           </div>
           <div class="header-info">
             <h1>{{ user.full_name }}</h1>
@@ -64,9 +64,19 @@ export default {
   },
   async mounted() {
     const token = localStorage.getItem('token');
+    const cachedUser = localStorage.getItem('user');
+    
     if (!token) {
       this.$router.push('/login');
       return;
+    }
+
+    if (cachedUser) {
+      try {
+        this.user = JSON.parse(cachedUser);
+      } catch (e) {
+        console.error("Failed to parse cached user", e);
+      }
     }
 
     try {

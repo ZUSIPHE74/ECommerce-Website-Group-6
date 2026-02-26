@@ -15,9 +15,25 @@
           <input type="email" v-model="email" required placeholder="Enter your email" />
         </div>
         
-        <div class="form-group">
+        <div class="form-group password-group">
           <label>Password</label>
-          <input type="password" v-model="password" required placeholder="Create a password" />
+          <div class="password-input-wrapper">
+            <input 
+              :type="showPassword ? 'text' : 'password'" 
+              v-model="password" 
+              required 
+              placeholder="Create a password" 
+            />
+            <button 
+              type="button" 
+              class="toggle-password" 
+              @click="showPassword = !showPassword"
+              :title="showPassword ? 'Hide password' : 'Show password'"
+            >
+              <Eye v-if="!showPassword" :size="20" />
+              <EyeOff v-else :size="20" />
+            </button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -95,12 +111,19 @@
 <script>
 import countriesFallback from '../utils/countries'
 import { postWithFallback } from '../utils/apiRequest'
+import { Eye, EyeOff } from 'lucide-vue-next'
+
 export default {
+  components: {
+    Eye,
+    EyeOff
+  },
   data() {
     return {
       full_name: '',
       email: '',
       password: '',
+      showPassword: false,
       country_id: '',
       currency_code: '',
       gender: '',
@@ -300,6 +323,43 @@ label {
   color: #e6e6e6;
   margin-bottom: 6px;
   font-weight: 600;
+}
+
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-110%); /* Adjusted for label and margin */
+  background: transparent;
+  border: none;
+  color: #00ffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+/* Adjusting for the layout in Register.vue which has labels */
+.password-group .toggle-password {
+  top: 27px; /* Fine-tuned to center in input */
+  transform: none;
+}
+
+.toggle-password:hover {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.toggle-password:active {
+  transform: scale(0.9);
 }
 
 .country-error {

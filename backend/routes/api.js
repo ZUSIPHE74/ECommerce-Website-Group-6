@@ -9,6 +9,7 @@ import {
   deleteProduct
 } from '../controllers/shopProductsController.js';
 import loginController from '../controllers/loginController.js';
+import * as cartController from '../controllers/cartController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -32,6 +33,13 @@ router.post('/reset-password-security', loginController.resetPasswordSecurity);
 router.post('/verify-security-answer', loginController.verifySecurityAnswer);
 router.get('/countries', loginController.getCountries);
 router.get('/currencies', loginController.getCurrencies);
+
+// Cart routes
+router.get('/cart/:userId', cartController.getCart);
+router.post('/cart', cartController.addToCart);
+router.patch('/cart', cartController.updateCartItem);
+router.delete('/cart', cartController.removeFromCart);
+router.delete('/cart/:userId', cartController.clearCart);
 
 router.get('/', (req, res) => {
   res.json({ message: "Welcome to the E-commerce API" });

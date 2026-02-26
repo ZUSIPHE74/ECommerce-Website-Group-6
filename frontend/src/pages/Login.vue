@@ -6,7 +6,7 @@
       
       <form @submit.prevent="handleLogin">
         <div class="form-group input-row user-row">
-          <div class="icon-badge left" aria-hidden="true"></div>
+          <div class="icon-badge left person" aria-hidden="true"></div>
           <input
             type="email"
             v-model="email"
@@ -17,14 +17,23 @@
         </div>
 
         <div class="form-group input-row pass-row">
+          <div class="icon-badge left lock" aria-hidden="true"></div>
           <input
-            type="password"
+            :type="showPassword ? 'text' : 'password'"
             v-model="password"
             required
             placeholder="Password"
             autocomplete="current-password"
           />
-          <div class="icon-badge right lock" aria-hidden="true"></div>
+          <button 
+            type="button" 
+            class="toggle-password" 
+            @click="showPassword = !showPassword"
+            :title="showPassword ? 'Hide password' : 'Show password'"
+          >
+            <Eye v-if="!showPassword" :size="28" />
+            <EyeOff v-else :size="28" />
+          </button>
         </div>
 
         <label class="remember-row">
@@ -50,12 +59,19 @@
 
 <script>
 import { postWithFallback } from '../utils/apiRequest'
+import { Eye, EyeOff } from 'lucide-vue-next'
+
 export default {
+  components: {
+    Eye,
+    EyeOff
+  },
   data() {
     return {
       email: '',
       password: '',
       rememberMe: false,
+      showPassword: false,
       error: ''
     }
   },
@@ -160,11 +176,11 @@ h1 {
 }
 
 .user-row input {
-  padding: 0 16px 0 51.2px;
+  padding: 0 40px 0 40px;
 }
 
 .pass-row input {
-  padding: 0 51.2px 0 16px;
+  padding: 0 60px 0 40px; /* More right padding for bigger icon */
 }
 
 .icon-badge {
@@ -173,17 +189,16 @@ h1 {
   transform: translateY(-50%);
   width: 24px;
   height: 24px;
-  border-radius: 0;
-  background: transparent;
   border: none;
+  background: transparent;
 }
 
 .icon-badge.left {
-  left: 16px;
+  left: 8px; /* Tighter to the edge */
 }
 
 .icon-badge.right {
-  right: 16px;
+  right: 8px; /* Tighter to the edge */
 }
 
 .icon-badge.left::before,
@@ -211,8 +226,8 @@ h1 {
   border-bottom: none;
 }
 
-.icon-badge.right::before,
-.icon-badge.right::after {
+.icon-badge.right.lock::before,
+.icon-badge.right.lock::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -235,6 +250,32 @@ h1 {
   height: 10px;
   border: 2px solid #7f7f7f;
   border-radius: 2px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 6px; /* Tighter to the corner */
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #ffffff; /* White as requested */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.toggle-password:hover {
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.icon-badge.right.lock {
+  display: none; /* Removed as we use the left one now */
 }
 
 .switch-auth {

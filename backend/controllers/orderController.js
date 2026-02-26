@@ -1,15 +1,15 @@
-const db = require("../config/database.js");
-const OrderModel = require("../models/orders.js");
+import db from "../config/database.js";
+import OrderModel from "../models/orders.js";
 
-exports.createOrder = async (req, res) => {
+export const createOrder = async (req, res) => {
   const { userId } = req.body;
 
   try {
     // Get cart items
     const [cartItems] = await db.query(
-      `SELECT c.product_id, c.quantity, p.price_usd
+      `SELECT c.product_id, c.quantity, p.price
        FROM cart_items c
-       JOIN products p ON c.product_id = p.id
+       JOIN products p ON c.product_id = p.product_id
        WHERE c.user_id = ?`,
       [userId]
     );
@@ -23,30 +23,30 @@ exports.createOrder = async (req, res) => {
       `SELECT u.currency_code, cr.rate_from_usd
        FROM users u
        JOIN currency_rates cr ON u.currency_code = cr.currency_code
-       WHERE u.id = ?`,
+       WHERE u.user_id = ?`,
       [userId]
     );
 
     let totalUsd = 0;
 
     cartItems.forEach(item => {
-      totalUsd += item.price_usd * item.quantity;
+      totalUsd += item.price * item.quantity;
     });
 
-    const convertedTotal = totalUsd * currency.rate_from_usd;
+    const convertedTotal = totalUsd * (currency ? currency.rate_from_usd : 1);
 
     // Create order
     const orderId = await OrderModel.createOrder(
       userId,
       convertedTotal,
-      currency.currency_code,
-      currency.rate_from_usd
+      currency ? currency.currency_code : 'USD',
+      currency ? currency.rate_from_usd : 1
     );
 
     // Insert order items
     for (let item of cartItems) {
       const convertedPrice =
-        item.price_usd * item.quantity * currency.rate_from_usd;
+        item.price * item.quantity * (currency ? currency.rate_from_usd : 1);
 
       await db.query(
         `INSERT INTO order_items
@@ -56,7 +56,7 @@ exports.createOrder = async (req, res) => {
           orderId,
           item.product_id,
           item.quantity,
-          item.price_usd,
+          item.price,
           convertedPrice
         ]
       );
@@ -76,7 +76,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-exports.getUserOrders = async (req, res) => {
+export const getUserOrders = async (req, res) => {
   const { userId } = req.params;
 
   try {
@@ -87,7 +87,7 @@ exports.getUserOrders = async (req, res) => {
   }
 };
 
-exports.getOrderDetails = async (req, res) => {
+export const getOrderDetails = async (req, res) => {
   const { orderId } = req.params;
 
   try {
@@ -98,7 +98,7 @@ exports.getOrderDetails = async (req, res) => {
   }
 };
 
-exports.updateOrderStatus = async (req, res) => {
+export const updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 

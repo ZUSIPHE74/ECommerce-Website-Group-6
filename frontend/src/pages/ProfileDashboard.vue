@@ -8,7 +8,7 @@
       <nav>
         <button :class="{ active: currentTab === 'profile' }" @click="currentTab = 'profile'">My Profile</button>
         <button :class="{ active: currentTab === 'orders' }" @click="currentTab = 'orders'">Orders</button>
-        <button :class="{ active: currentTab === 'wishlist' }" @click="currentTab = 'wishlist'">Wishlist</button>
+        <button :class="{ active: currentTab === 'orders' }" @click="currentTab = 'orders'">Orders</button>
         <button @click="logout" class="logout-btn">Sign Out</button>
       </nav>
     </aside>
@@ -87,21 +87,34 @@ export default {
     }
 
     try {
-      this.user = await getWithFallback('/api/user/profile', {
+      const cached = localStorage.getItem('user');
+      if (cached) {
+        this.user = JSON.parse(cached);
+        this.syncFormWithUser();
+      }
+
+      const freshUser = await getWithFallback('/api/user/profile', {
         'x-auth-token': token
       });
+      this.user = freshUser;
       localStorage.setItem('user', JSON.stringify(this.user));
+      this.syncFormWithUser();
     } catch (err) {
       this.logout();
       return;
     }
-    this.form = {
-      full_name: this.user?.full_name || '',
-      email: this.user?.email || '',
-      gender: this.user?.gender || '',
-      country_id: this.user?.country_id ? Number(this.user.country_id) : '',
-      currency_code: this.user?.currency_code || ''
-    };
+  },
+  methods: {
+    syncFormWithUser() {
+      if (!this.user) return;
+      this.form = {
+        full_name: this.user.full_name || '',
+        email: this.user.email || '',
+        gender: this.user.gender || '',
+        country_id: this.user.country_id ? Number(this.user.country_id) : '',
+        currency_code: this.user.currency_code || ''
+      };
+    },
 
     await this.loadCountries();
   },
