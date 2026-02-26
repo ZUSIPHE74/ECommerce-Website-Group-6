@@ -153,19 +153,7 @@ function closeClearConfirm() {
 // Clear cart (if needed)
 async function clearCart() {
   const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
-
-  const removeRequests = cart.value
-    .map((item) => Number(item?.product_Id ?? item?.product_id ?? item?.id))
-    .filter((productId) => !!productId)
-    .map((productId) =>
-      store.dispatch('removeFromCart', {
-        user_Id: resolvedUserId,
-        product_Id: productId
-      })
-    )
-
-  await Promise.all(removeRequests)
-  await store.dispatch('fetchCart', resolvedUserId)
+  await store.dispatch('clearCart', resolvedUserId)
   closeClearConfirm()
 }
 </script>
@@ -328,3 +316,4 @@ async function clearCart() {
   color: #ffffff;
 }
 </style>
+
