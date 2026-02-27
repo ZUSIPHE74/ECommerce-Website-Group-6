@@ -17,6 +17,7 @@ import Contact from '../pages/contact.vue'
 const routes = [
   { path: '/', component: Home, name: 'Home' },
   { path: '/about', component: About, name: 'About' },
+  { path: '/contact', component: Contact, name: 'Contact' }, 
   { path: '/shop', component: Shop, name: 'Shop' },
   { path: '/cart', component: Cart, name: 'Cart' },
   { path: '/checkout', component: Checkout, name: 'Checkout' },
