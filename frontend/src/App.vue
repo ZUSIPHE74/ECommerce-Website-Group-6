@@ -33,7 +33,7 @@
           <User size="20" />
         </RouterLink>
 
-        <RouterLink v-if="isLoggedIn" to="/account/profile">
+        <RouterLink v-if="isLoggedIn" to="/dashboard">
           <User size="20" />
         </RouterLink>
 

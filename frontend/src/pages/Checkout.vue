@@ -107,10 +107,12 @@
 
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import router from '@/router'
 import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
+
+const CHECKOUT_DRAFT_KEY = 'checkout_draft'
 
 const store = useStore()
 

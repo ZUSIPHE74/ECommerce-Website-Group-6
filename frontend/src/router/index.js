@@ -12,12 +12,12 @@ import Register from '../pages/Register.vue'
 import ForgotPassword from '../pages/ForgotPassword.vue'
 import Profile from '../pages/Profile.vue'
 import ProfileDashboard from '../pages/ProfileDashboard.vue'
-import Contact from '../pages/contact.vue'
+import Contact from '../pages/contact.vue' // Note: Capital C in Contact.vue
 
 const routes = [
   { path: '/', component: Home, name: 'Home' },
   { path: '/about', component: About, name: 'About' },
-  { path: '/contact', component: Contact, name: 'Contact' }, 
+  { path: '/contact', component: Contact, name: 'Contact' }, // Keep only ONE contact route
   { path: '/shop', component: Shop, name: 'Shop' },
   { path: '/cart', component: Cart, name: 'Cart' },
   { path: '/checkout', component: Checkout, name: 'Checkout' },
@@ -31,15 +31,10 @@ const routes = [
   { path: '/profile', redirect: '/account/profile' },
   { path: '/account/profile', component: Profile },
   { path: '/dashboard', component: ProfileDashboard },
+  { path: '/dashboard/edit', component: ProfileDashboard, name: 'EditProfile' }, // Add this line
   { path: '/account/dashboard', redirect: '/dashboard' },
 
-  { path: '/:pathMatch(.*)*', redirect: '/' },
-
-  {
-  path: '/contact',
-  name: 'Contact',
-  component: Contact
-}
+  { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
 const router = createRouter({
