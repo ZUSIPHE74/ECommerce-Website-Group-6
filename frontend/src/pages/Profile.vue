@@ -42,7 +42,7 @@
 
         <div class="actions">
           <!-- FIXED: Changed from /account/dashboard to /dashboard -->
-          <router-link to="/dashboard" class="btn-primary">Edit Your Profile</router-link>
+          <router-link to="/dashboard/edit" class="btn-primary">Edit Your Profile</router-link>
           <button @click="closeProfile" class="btn-secondary">Close Profile</button>
         </div>
       </div>

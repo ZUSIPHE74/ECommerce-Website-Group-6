@@ -7,7 +7,8 @@
 
     <!-- Show cart items -->
     <div v-else>
-      <article v-for="item in cart" :key="item.id" class="item">
+      <!-- FIXED: Use product_id as key instead of id for better compatibility -->
+      <article v-for="item in cart" :key="item.product_id || item.id" class="item">
         <div>
           <h3>{{ item.name }}</h3>
           <p>{{ formatMoney(item.price) }} each</p>
@@ -18,7 +19,7 @@
             Qty:
             <select
               :value="Number(item.quantity)"
-              @change="updateItemQuantity(item.product_id, Number($event.target.value))"
+              @change="updateItemQuantity(item.product_id || item.id, Number($event.target.value))"
             >
               <option
                 v-for="qty in quantityOptions"
@@ -113,9 +114,13 @@ onMounted(() => {
 // Remove item from cart
 function removeItem(item) {
   const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
-  const productId = Number(item?.product_Id ?? item?.product_id ?? item?.id)
+  // FIXED: More robust product ID detection
+  const productId = Number(item?.product_id ?? item?.product_Id ?? item?.id)
 
-  if (!productId) return
+  if (!productId) {
+    console.error('Could not determine product ID', item)
+    return
+  }
 
   store.dispatch('removeFromCart', {
     user_Id: resolvedUserId,
@@ -125,6 +130,11 @@ function removeItem(item) {
 
 // Update quantity for an item (1 to 20)
 function updateItemQuantity(productId, quantity) {
+  if (!productId) {
+    console.error('No product ID provided for quantity update')
+    return
+  }
+  
   const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
   const safeQuantity = Math.min(20, Math.max(1, Number(quantity) || 1))
 
@@ -316,4 +326,3 @@ async function clearCart() {
   color: #ffffff;
 }
 </style>
-

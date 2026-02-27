@@ -141,15 +141,15 @@ export default {
         this.currency_code = selectedCountry.currency_code;
       }
     },
-    async handleRegister() {
+    // In Register.vue, update the handleRegister method:
+
+async handleRegister() {
   try {
     this.error = '';
-    
     if (!this.country_id) {
       this.error = 'Please select your country.';
       return;
     }
-    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
@@ -169,27 +169,20 @@ export default {
       throw new Error('Registration succeeded but response was incomplete.');
     }
 
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        if (data?.user?.currency_code) {
-          localStorage.setItem('currency_code', data.user.currency_code);
-        }
-        localStorage.setItem('userId', String(data.user.id));
-
-    this.$router.push('/account/profile');
-  } catch (err) {
-    console.error('Registration error:', err);
-    
-    // Handle specific error messages
-    if (err.message.includes('500') || err.message.includes('Duplicate entry')) {
-      this.error = 'Registration failed: This email or information may already be registered.';
-    } else {
-      this.error = err?.message ? `Registration failed (${err.message})` : 'Unable to reach server. Please try again.';
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    if (data?.user?.currency_code) {
+      localStorage.setItem('currency_code', data.user.currency_code);
     }
+
+    // CHANGE THIS LINE - redirect to dashboard instead of account/profile
+    this.$router.push('/dashboard');
+  } catch (err) {
+    this.error = err?.message ? `Registration failed (${err.message})` : 'Unable to reach server. Please try again.';
   }
 }
-  }
 }
+  }
 </script>
 
 <style scoped>
