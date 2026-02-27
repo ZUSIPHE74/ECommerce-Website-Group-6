@@ -3,11 +3,17 @@
     <h2>Checkout</h2>
 
     <!-- Show if cart is empty -->
-    <p v-if="cart.length === 0" class="empty">Your cart is empty.</p>
+    <p v-if="cart.length === 0" class="empty">
+      Your cart is empty.
+    </p>
 
     <div v-else>
       <!-- Display cart items -->
-      <div v-for="items in cart" :key="items.id" class="checkout-item">
+      <div
+        v-for="items in cart"
+        :key="items.id"
+        class="checkout-item"
+      >
         <p>{{ items.name }} x {{ items.quantity }}</p>
         <p>{{ formatMoney(Number(items.price) * Number(items.quantity)) }}</p>
       </div>
@@ -54,7 +60,6 @@
       <!-- ================= LAYBY SECTION ================= -->
       <div v-if="paymentMethod === 'layby'" class="layby-terms">
 
-        <!-- How Layby Works Box -->
         <div class="layby-info">
           <h3>Terms and Conditions</h3>
           <h4>How Layby Works</h4>
@@ -70,7 +75,6 @@
           </ul>
         </div>
 
-        <!-- Terms & Conditions Checkbox -->
         <div class="layby-checkbox">
           <input type="checkbox" v-model="acceptedTerms" />
           <label>
@@ -78,7 +82,6 @@
           </label>
         </div>
 
-        <!-- Error Message -->
         <p v-if="laybyError" class="error-msg">
           Have you read the Terms & Conditions? Please confirm before continuing.
         </p>
@@ -102,14 +105,14 @@
   </section>
 </template>
 
+
 <script setup>
-import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import router from '@/router'
 import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
 
 const store = useStore()
-const CHECKOUT_DRAFT_KEY = 'checkoutDraft'
 
 // ================= CART DATA =================
 function getCurrentUserId() {
@@ -131,9 +134,8 @@ const shippingCost = computed(() => store.getters.shippingCost)
 const customsCharges = computed(() => store.getters.customsCharges)
 const totalWithShipping = computed(() => store.getters.totalWithShipping)
 
-onMounted(async () => {
-  await store.dispatch('fetchCart', getCurrentUserId())
-  loadCheckoutDraft()
+onMounted(() => {
+  store.dispatch('fetchCart', getCurrentUserId())
 })
 
 // ================= SHIPPING FORM =================
@@ -390,7 +392,7 @@ function placeOrder() {
   display: block;
   margin: 20px auto 0;
   padding: 10px 16px;
-  background-color: blue;
+  background-color: #159a9a;
   color: rgb(255, 255, 255);
   border: none;
   border-radius: 6px;

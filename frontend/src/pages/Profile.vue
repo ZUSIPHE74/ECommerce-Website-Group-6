@@ -5,7 +5,7 @@
         <div class="profile-header">
           <div class="avatar-container">
             <div class="avatar-glow"></div>
-            <div class="avatar">{{ user.full_name.charAt(0) }}</div>
+            <div class="avatar">{{ user.full_name?.charAt(0) || 'U' }}</div>
           </div>
           <div class="header-info">
             <h1>{{ user.full_name }}</h1>
@@ -41,6 +41,7 @@
         </div>
 
         <div class="actions">
+          <!-- FIXED: Changed from /account/dashboard to /dashboard -->
           <router-link to="/dashboard" class="btn-primary">Edit Your Profile</router-link>
           <button @click="closeProfile" class="btn-secondary">Close Profile</button>
         </div>
@@ -59,7 +60,9 @@ import { getWithFallback } from '../utils/apiRequest'
 export default {
   data() {
     return {
-      user: null
+      user: null,
+      loading: true,
+      error: null
     }
   },
   async mounted() {
@@ -70,12 +73,39 @@ export default {
     }
 
     try {
-      this.user = await getWithFallback('/api/user/profile', {
+      // First try to get from localStorage for immediate display
+      const cachedUser = localStorage.getItem('user');
+      if (cachedUser) {
+        this.user = JSON.parse(cachedUser);
+      }
+
+      // Then fetch fresh data from API
+      const response = await getWithFallback('/api/user/profile', {
         'x-auth-token': token
       });
+      
+      console.log('Profile API response:', response); // Debug log
+      
+      // Handle the response structure from your backend
+      if (response && response.success === true && response.user) {
+        this.user = response.user;
+      } else if (response && response.user) {
+        this.user = response.user;
+      } else if (response && typeof response === 'object') {
+        this.user = response;
+      }
+      
+      // Update localStorage
       localStorage.setItem('user', JSON.stringify(this.user));
+      this.loading = false;
+      
     } catch (err) {
-      this.logout();
+      console.error('Profile fetch error:', err);
+      this.error = err.message;
+      // If API fails but we have cached user, keep showing it
+      if (!this.user) {
+        this.logout();
+      }
     }
   },
   methods: {
@@ -291,4 +321,3 @@ export default {
   }
 }
 </style>
-
