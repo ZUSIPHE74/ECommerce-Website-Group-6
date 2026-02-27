@@ -14,7 +14,7 @@
       </div>
 
       <!-- ================= CARD ================= -->
-      <div v-if="checkoutData.paymentMethod === 'card'" class="form">
+      <div v-if="checkoutData.paymentMethod === 'card'" class="form card-form">
         <input v-model="card.name" type="text" placeholder="Name on Card" required />
         <input v-model="card.number" type="text" placeholder="Card Number" required />
         <div class="row">
@@ -31,7 +31,7 @@
       </div>
 
       <!-- ================= PAYPAL ================= -->
-      <div v-else-if="checkoutData.paymentMethod === 'paypal'" class="form">
+      <div v-else-if="checkoutData.paymentMethod === 'paypal'" class="form paypal-form">
         <input v-model="paypal.email" type="email" placeholder="PayPal Email" required />
         <input v-model="paypal.reference" type="text" placeholder="PayPal Reference (optional)" />
       </div>
@@ -41,7 +41,14 @@
         <h3 class="bank-title">Instant EFT Details</h3>
         <input class="eft-field" v-model="eftAuto.accountHolder" type="text" placeholder="Account Holder Name" required />
         <input class="eft-field" v-model="eftAuto.accountNumber" type="text" placeholder="Account Number" required />
-        <input class="eft-field" v-model="eftAuto.phoneNumber" type="tel" placeholder="Cell Phone (+country code)" required />
+        <div class="phone-field">
+          <select class="eft-field phone-code" v-model="eftAuto.countryCode">
+            <option v-for="country in countryDialCodes" :key="country.id" :value="country.code">
+              {{ country.label }} ({{ country.code }})
+            </option>
+          </select>
+          <input class="eft-field phone-number" v-model="eftAuto.phoneNumber" type="tel" placeholder="Cell Phone Number" required />
+        </div>
         <input
           v-if="showEftOtp"
           class="eft-field"
@@ -70,7 +77,7 @@
         <h3>Layby Plan Details</h3>
 
         <p>
-          Deposit (20%): 
+          Deposit ({{ laybyDepositPercent }}%): 
           <strong>{{ formatMoney(depositAmount) }}</strong>
         </p>
 
@@ -111,13 +118,66 @@
           Product will be delivered after full payment is completed.
         </p>
 
+        <div class="layby-debit-method">
+          <h4>Monthly Debit Method</h4>
+          <div class="layby-method-options">
+            <label class="duration-option" :class="{ active: laybyDebitMethod === 'bank' }">
+              <input type="radio" v-model="laybyDebitMethod" value="bank" />
+              <span>Bank Account</span>
+            </label>
+            <label class="duration-option" :class="{ active: laybyDebitMethod === 'paypal' }">
+              <input type="radio" v-model="laybyDebitMethod" value="paypal" />
+              <span>PayPal Auto-Debit</span>
+            </label>
+          </div>
+        </div>
+
         <!-- Bank Details for Auto-Debit -->
-         <div class="layby-bank-details"> 
+        <div v-if="laybyDebitMethod === 'bank'" class="layby-bank-details">
           <h4>Auto-Debit Details</h4>
           <input v-model="laybyBank.accountHolder" type="text" placeholder="Account Holder Name" required />
-          <input v-model="laybyBank.accountNumber" type="text" placeholder="Account Number" required />
-          <input v-model="laybyBank.phoneNumber" type="tel" placeholder="Cell Phone (+country code)" required />
-         </div>
+          <input
+            v-model="laybyBank.accountNumber"
+            type="text"
+            inputmode="numeric"
+            maxlength="12"
+            placeholder="Account Number (8-12 digits)"
+            required
+          />
+          <div class="phone-field layby-phone">
+            <select v-model="laybyBank.countryCode">
+              <option v-for="country in countryDialCodes" :key="`layby-${country.id}`" :value="country.code">
+                {{ country.label }} ({{ country.code }})
+              </option>
+            </select>
+            <input v-model="laybyBank.phoneNumber" type="tel" placeholder="Cell Phone Number" required />
+          </div>
+          <input
+            v-if="showLaybyOtp"
+            v-model="laybyBank.otp"
+            type="text"
+            maxlength="6"
+            placeholder="One-Time PIN (6 digits)"
+            required
+          />
+          <div v-if="showLaybyOtp" class="otp-row">
+            <span v-if="!canResendLaybyOtp" class="otp-timer">Didn't get OTP? Resend in {{ laybyOtpCountdown }}s</span>
+            <button
+              v-else
+              type="button"
+              class="otp-resend-btn"
+              @click="resendLaybyOtp"
+            >
+              Resend OTP
+            </button>
+          </div>
+        </div>
+
+        <div v-else class="layby-bank-details layby-paypal-details">
+          <h4>PayPal Auto-Debit (Recurring)</h4>
+          <input v-model="laybyPaypal.email" type="email" placeholder="PayPal Email" required />
+          <input v-model="laybyPaypal.billingAgreementId" type="text" placeholder="PayPal Billing Agreement / Subscription ID" required />
+        </div>
 
       </div>
 
@@ -143,6 +203,7 @@ import { computed, reactive, ref, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
+import { postWithFallback } from '../utils/apiRequest'
 
 const router = useRouter()
 const store = useStore()
@@ -166,6 +227,7 @@ const paypal = reactive({
 const eftAuto = reactive({
   accountHolder: '',
   accountNumber: '',
+  countryCode: '+1',
   phoneNumber: '',
   otp: ''
 })
@@ -174,26 +236,62 @@ const otpCountdown = ref(15)
 const showOtpPopup = ref(false)
 const otpPopupMessage = ref('')
 let otpTimer = null
+const laybyOtpCountdown = ref(15)
+let laybyOtpTimer = null
 
 const laybyBank = reactive({
   accountHolder: '',
   accountNumber: '',
-  phoneNumber: ''
+  countryCode: '+1',
+  phoneNumber: '',
+  otp: ''
 })
+const laybyPaypal = reactive({
+  email: '',
+  billingAgreementId: ''
+})
+const laybyDebitMethod = ref('bank')
+
+const countryDialCodes = [
+  { id: 'AU', label: 'Australia', code: '+61' },
+  { id: 'BR', label: 'Brazil', code: '+55' },
+  { id: 'CA', label: 'Canada', code: '+1' },
+  { id: 'CN', label: 'China', code: '+86' },
+  { id: 'FR', label: 'France', code: '+33' },
+  { id: 'DE', label: 'Germany', code: '+49' },
+  { id: 'IN', label: 'India', code: '+91' },
+  { id: 'IT', label: 'Italy', code: '+39' },
+  { id: 'JP', label: 'Japan', code: '+81' },
+  { id: 'KE', label: 'Kenya', code: '+254' },
+  { id: 'MX', label: 'Mexico', code: '+52' },
+  { id: 'NZ', label: 'New Zealand', code: '+64' },
+  { id: 'NG', label: 'Nigeria', code: '+234' },
+  { id: 'ZA', label: 'South Africa', code: '+27' },
+  { id: 'ES', label: 'Spain', code: '+34' },
+  { id: 'GB', label: 'United Kingdom', code: '+44' },
+  { id: 'US', label: 'United States', code: '+1' }
+]
 
 // ================= LAYBY CALCULATIONS =================
+// Contract duration in months
+const laybyMonths = ref(12)
+
+const laybyDepositRate = computed(() => {
+  if (laybyMonths.value === 24) return 0.10
+  return 0.15
+})
+
+const laybyDepositPercent = computed(() => Math.round(laybyDepositRate.value * 100))
+
 const depositAmount = computed(() => {
   if (!checkoutData) return 0
-  return checkoutData.totals.total * 0.20
+  return checkoutData.totals.total * laybyDepositRate.value
 })
 
 const remainingAmount = computed(() => {
   if (!checkoutData) return 0
   return checkoutData.totals.total - depositAmount.value
 })
-
-// Contract duration in months
-const laybyMonths = ref(12)
 
 const monthlyInstallment = computed(() => {
   if (!checkoutData) return 0
@@ -218,11 +316,20 @@ const paymentButtonLabel = computed(() => {
 })
 
 const showEftOtp = computed(() => {
-  const digits = (eftAuto.phoneNumber || '').replace(/\D/g, '')
+  const digits = `${(eftAuto.countryCode || '').replace(/\D/g, '')}${(eftAuto.phoneNumber || '').replace(/\D/g, '')}`
   return digits.length >= 8 && digits.length <= 15
 })
 
+const showLaybyOtp = computed(() => {
+  if (laybyDebitMethod.value !== 'bank') return false
+  const localDigits = (laybyBank.phoneNumber || '').replace(/\D/g, '')
+  if (laybyBank.countryCode === '+27') return localDigits.length === 10
+  const fullDigits = `${(laybyBank.countryCode || '').replace(/\D/g, '')}${localDigits}`
+  return fullDigits.length >= 8 && fullDigits.length <= 15
+})
+
 const canResendOtp = computed(() => showEftOtp.value && otpCountdown.value === 0)
+const canResendLaybyOtp = computed(() => showLaybyOtp.value && laybyOtpCountdown.value === 0)
 
 function startOtpCountdown() {
   if (otpTimer) clearInterval(otpTimer)
@@ -241,6 +348,25 @@ function resendOtp() {
   if (!canResendOtp.value) return
   eftAuto.otp = ''
   startOtpCountdown()
+}
+
+function startLaybyOtpCountdown() {
+  if (laybyOtpTimer) clearInterval(laybyOtpTimer)
+  laybyOtpCountdown.value = 15
+  laybyOtpTimer = setInterval(() => {
+    if (laybyOtpCountdown.value > 0) {
+      laybyOtpCountdown.value -= 1
+    } else {
+      clearInterval(laybyOtpTimer)
+      laybyOtpTimer = null
+    }
+  }, 1000)
+}
+
+function resendLaybyOtp() {
+  if (!canResendLaybyOtp.value) return
+  laybyBank.otp = ''
+  startLaybyOtpCountdown()
 }
 
 function openOtpPopup(message) {
@@ -265,8 +391,36 @@ watch(showEftOtp, (enabled) => {
   eftAuto.otp = ''
 })
 
+watch(showLaybyOtp, (enabled) => {
+  if (enabled) {
+    if (!laybyOtpTimer && laybyOtpCountdown.value === 15) startLaybyOtpCountdown()
+    return
+  }
+  if (laybyOtpTimer) {
+    clearInterval(laybyOtpTimer)
+    laybyOtpTimer = null
+  }
+  laybyOtpCountdown.value = 15
+  laybyBank.otp = ''
+})
+
+watch(laybyDebitMethod, (method) => {
+  if (method === 'bank') {
+    laybyPaypal.email = ''
+    laybyPaypal.billingAgreementId = ''
+    return
+  }
+  if (laybyOtpTimer) {
+    clearInterval(laybyOtpTimer)
+    laybyOtpTimer = null
+  }
+  laybyOtpCountdown.value = 15
+  laybyBank.otp = ''
+})
+
 onBeforeUnmount(() => {
   if (otpTimer) clearInterval(otpTimer)
+  if (laybyOtpTimer) clearInterval(laybyOtpTimer)
 })
 
 // ================= COMPLETE PAYMENT =================
@@ -335,24 +489,82 @@ async function completePayment() {
 
   // LAYBY VALIDATION
   if (checkoutData.paymentMethod === 'layby') {
-    const laybyPhoneDigits = (laybyBank.phoneNumber || '').replace(/\D/g, '')
-    if (!laybyBank.accountHolder.trim() || !laybyBank.accountNumber.trim() || !laybyBank.phoneNumber.trim()) {
-      alert('Field required: account holder, account number, and cell phone for Layby.')
-      return
-    }
-    if (laybyPhoneDigits.length < 8 || laybyPhoneDigits.length > 15) {
-      alert('Enter a valid international cell phone number (8-15 digits) for Layby.')
-      return
+    if (laybyDebitMethod.value === 'bank') {
+      const laybyAccountDigits = (laybyBank.accountNumber || '').replace(/\D/g, '')
+      if (!laybyBank.accountHolder.trim() || !laybyBank.accountNumber.trim() || !laybyBank.phoneNumber.trim()) {
+        alert('Field required: account holder, account number, and cell phone for Layby.')
+        return
+      }
+      if (laybyAccountDigits.length < 8 || laybyAccountDigits.length > 12) {
+        alert('Enter a valid Layby account number (8-12 digits).')
+        return
+      }
+      if (!showLaybyOtp.value) {
+        alert('Enter a complete phone number to receive OTP. South Africa requires 10 digits after +27.')
+        return
+      }
+      if (!/^[0-9]{6}$/.test((laybyBank.otp || '').trim())) {
+        openOtpPopup('Layby OTP must be exactly 6 digits.')
+        return
+      }
+    } else {
+      const laybyPaypalEmail = (laybyPaypal.email || '').trim()
+      const laybyPaypalAgreementId = (laybyPaypal.billingAgreementId || '').trim()
+      if (!laybyPaypalEmail) {
+        alert('Field required: PayPal email for Layby auto-debit.')
+        return
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(laybyPaypalEmail)) {
+        alert('Enter a valid PayPal email address for Layby auto-debit.')
+        return
+      }
+      if (!laybyPaypalAgreementId) {
+        alert('Field required: PayPal Billing Agreement / Subscription ID for recurring Layby auto-debit.')
+        return
+      }
+      laybyPaypal.email = laybyPaypalEmail
+      laybyPaypal.billingAgreementId = laybyPaypalAgreementId
     }
   }
 
   // Store payment outcome
+  const token = localStorage.getItem('token')
+  if (!token) {
+    alert('Please log in to place your order.')
+    router.push('/login')
+    return
+  }
+
+  try {
+    const orderResponse = await postWithFallback(
+      '/api/orders',
+      {
+        shipping: checkoutData.shipping,
+        paymentMethod: checkoutData.paymentMethod
+      },
+      { 'x-auth-token': token }
+    )
+    if (orderResponse?.orderId) {
+      sessionStorage.setItem('orderId', String(orderResponse.orderId))
+    }
+  } catch (error) {
+    alert(`Unable to place order: ${error.message}`)
+    return
+  }
+
   if (checkoutData.paymentMethod === 'layby') {
+    const debitDetails = laybyDebitMethod.value === 'paypal'
+      ? { ...laybyPaypal }
+      : { ...laybyBank }
     const laybyInfo = {
       depositPaid: depositAmount.value,
+      depositRate: laybyDepositRate.value,
       contractMonths: laybyMonths.value,
       monthlyInstallment: monthlyInstallment.value,
-      bankDetails: { ...laybyBank },
+      monthlyDebitMethod: laybyDebitMethod.value,
+      monthlyDebitAuto: true,
+      monthlyDebitDetails: debitDetails,
+      bankDetails: laybyDebitMethod.value === 'bank' ? { ...laybyBank } : null,
       remainingBalance: remainingAmount.value
     }
 
@@ -415,6 +627,61 @@ function formatExpiry(event) {
   font-size: 24px;
 }
 
+.card-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.card-form input::placeholder {
+  color: #94a3b8;
+}
+
+.card-form input:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
+}
+
+.card-form .row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.paypal-form input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.paypal-form input::placeholder {
+  color: #94a3b8;
+}
+
+.paypal-form input:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
+}
+
+.paypal-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .eft-field {
   box-sizing: border-box;
   width: 100%;
@@ -431,6 +698,21 @@ function formatExpiry(event) {
   outline: none;
   border-color: #00ffff;
   box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
+}
+
+.phone-field {
+  display: grid;
+  grid-template-columns: minmax(140px, 180px) 1fr;
+  gap: 8px;
+}
+
+.phone-field .phone-code {
+  appearance: none;
+  cursor: pointer;
+}
+
+.phone-field .phone-number {
+  margin-bottom: 10px;
 }
 
 .otp-row {
@@ -541,6 +823,22 @@ function formatExpiry(event) {
   background: rgba(0, 255, 255, 0.12);
 }
 
+.layby-debit-method {
+  margin-top: 14px;
+}
+
+.layby-debit-method h4 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.layby-method-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .layby-bank-details {
   box-sizing: border-box;
   margin-top: 14px;
@@ -569,11 +867,28 @@ function formatExpiry(event) {
   color: #e2e8f0;
 }
 
-.layby-bank-details input:last-child {
+.layby-paypal-details input:last-child {
   margin-bottom: 0;
 }
 
+.layby-bank-details select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #111827;
+  color: #e2e8f0;
+}
+
 .layby-bank-details input:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
+}
+
+.layby-bank-details select:focus {
   outline: none;
   border-color: #00ffff;
   box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.18);
@@ -594,6 +909,20 @@ function formatExpiry(event) {
 
   .layby-bank-details input {
     margin-bottom: 0;
+  }
+
+  .layby-phone {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 699px) {
+  .paypal-form {
+    grid-template-columns: 1fr;
+  }
+
+  .phone-field {
+    grid-template-columns: 1fr;
   }
 }
 

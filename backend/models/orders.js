@@ -1,7 +1,6 @@
 const db = require("../config/database.js");
 
 class OrderModel {
-
   static async createOrder(userId, totalPrice, currencyCode, rate) {
     const [result] = await db.query(
       `INSERT INTO orders 
