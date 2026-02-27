@@ -12,10 +12,12 @@ import Register from '../pages/Register.vue'
 import ForgotPassword from '../pages/ForgotPassword.vue'
 import Profile from '../pages/Profile.vue'
 import ProfileDashboard from '../pages/ProfileDashboard.vue'
+import Contact from '../pages/contact.vue'  
 
 const routes = [
   { path: '/', component: Home, name: 'Home' },
   { path: '/about', component: About, name: 'About' },
+  { path: '/contact', component: Contact, name: 'Contact' }, 
   { path: '/shop', component: Shop, name: 'Shop' },
   { path: '/cart', component: Cart, name: 'Cart' },
   { path: '/checkout', component: Checkout, name: 'Checkout' },
