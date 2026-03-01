@@ -9,7 +9,8 @@ async function parseResponse(response) {
 }
 
 function buildTargets(path) {
-  return [path, `http://127.0.0.1:5050${path}`, `http://localhost:5050${path}`];
+  const normalizedPath = path.startsWith('/api') ? path.slice(4) : path;
+  return [path, `http://127.0.0.1:5050/api${normalizedPath}`, `http://localhost:5050/api${normalizedPath}`];
 }
 
 export async function requestWithFallback(method, path, payload, extraHeaders = {}) {
