@@ -1,0 +1,18 @@
+{
+    "sourceFile": "backend/config/database.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1772144520397,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1772144520397,
+            "name": "Commit-0",
+            "content": "import mysql from 'mysql2/promise';\r\nimport dotenv from 'dotenv';\r\n\r\ndotenv.config();\r\n\r\nconst pool = mysql.createPool({\r\n  host: process.env.HOST || 'localhost',\r\n  user: process.env.USER || 'root',\r\n  password: process.env.PASSWORD || '',\r\n  database: process.env.DATABASE || 'ecommerce_db',\r\n  waitForConnections: true,\r\n  connectionLimit: 10,\r\n  queueLimit: 0\r\n});\r\n\r\n// ✅ TEST DATABASE CONNECTION\r\n(async () => {\r\n  try {\r\n    const connection = await pool.getConnection();\r\n    console.log('✅ Database connected successfully!');\r\n    connection.release();\r\n  } catch (error) {\r\n    console.error('❌ Database connection failed:', error.message);\r\n  }\r\n})();\r\n\r\nexport default pool;\r\n"
+        }
+    ]
+}

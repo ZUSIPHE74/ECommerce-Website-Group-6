@@ -1,0 +1,18 @@
+{
+    "sourceFile": "backend/models/paymentProcessing.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1772141817949,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1772141817949,
+            "name": "Commit-0",
+            "content": "\r\nimport pool from '../config/database.js';\r\n\r\nclass PaymentProcessing {\r\n\r\n  static async createCheckoutSession(userId) {\r\n    // Get cart items from DB\r\n    const [cartItems] = await pool.query(\r\n      `\r\n        SELECT c.quantity, p.name, p.price\r\n        FROM cart_items c\r\n        JOIN products p ON c.product_id = p.product_id\r\n        WHERE c.user_id = ?\r\n      `,\r\n      [userId]\r\n    );\r\n\r\n    if (!cartItems.length) {\r\n      throw new Error(\"Cart is empty\");\r\n    }\r\n\r\n    const line_items = cartItems.map(item => ({\r\n      price_data: {\r\n        currency: \"usd\",\r\n        product_data: {\r\n          name: item.name\r\n        },\r\n        unit_amount: Math.round(Number(item.price) * 100)\r\n      },\r\n      quantity: item.quantity\r\n    }));\r\n\r\n    const session = await stripe.checkout.sessions.create({\r\n      payment_method_types: [\"card\"],\r\n      line_items,\r\n      mode: \"payment\",\r\n      success_url: \"http://localhost:5173/order-confirmation\",\r\n      cancel_url: \"http://localhost:5173/checkout\"\r\n    });\r\n\r\n    return session.url;\r\n  }\r\n}\r\n\r\nexport default PaymentProcessing;\r\n"
+        }
+    ]
+}
