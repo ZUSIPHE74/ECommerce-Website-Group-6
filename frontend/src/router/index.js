@@ -17,6 +17,7 @@ import Contact from '../pages/Contact.vue'
 const routes = [
   { path: '/', component: Home, name: 'Home' },
   { path: '/about', component: About, name: 'About' },
+  { path: '/contact', component: Contact, name: 'Contact' }, // Keep only ONE contact route
   { path: '/shop', component: Shop, name: 'Shop' },
   { path: '/cart', component: Cart, name: 'Cart' },
   { path: '/checkout', component: Checkout, name: 'Checkout' },
@@ -30,15 +31,10 @@ const routes = [
   { path: '/profile', redirect: '/account/profile' },
   { path: '/account/profile', component: Profile },
   { path: '/dashboard', component: ProfileDashboard },
+  { path: '/dashboard/edit', component: ProfileDashboard, name: 'EditProfile' }, // Add this line
   { path: '/account/dashboard', redirect: '/dashboard' },
 
-  { path: '/:pathMatch(.*)*', redirect: '/' },
-
-  {
-  path: '/contact',
-  name: 'Contact',
-  component: Contact
-}
+  { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
 const router = createRouter({

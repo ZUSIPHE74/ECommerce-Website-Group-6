@@ -60,29 +60,32 @@ export default {
     }
   },
   methods: {
-    async handleLogin() {
-      try {
-        this.error = '';
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        const data = await postWithFallback('/api/auth/login', {
-          email: this.email,
-          password: this.password
-        });
+    // In Login.vue, update the handleLogin method:
 
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('userId', String(data.user.id));
-        localStorage.setItem('rememberMe', this.rememberMe ? '1' : '0');
-        if (data?.user?.currency_code) {
-          localStorage.setItem('currency_code', data.user.currency_code);
-        }
+async handleLogin() {
+  try {
+    this.error = '';
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    const data = await postWithFallback('/api/auth/login', {
+      email: this.email,
+      password: this.password
+    });
 
-        this.$router.push('/account/profile');
-      } catch (err) {
-        this.error = err?.message ? `Login failed (${err.message})` : 'Unable to reach server. Please try again.';
-      }
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    localStorage.setItem('userId', String(data.user.id));
+    localStorage.setItem('rememberMe', this.rememberMe ? '1' : '0');
+    if (data?.user?.currency_code) {
+      localStorage.setItem('currency_code', data.user.currency_code);
     }
+
+    // CHANGE THIS LINE - redirect to dashboard instead of account/profile
+    this.$router.push('/dashboard');
+  } catch (err) {
+    this.error = err?.message ? `Login failed (${err.message})` : 'Unable to reach server. Please try again.';
+  }
+}
   }
 }
 </script>

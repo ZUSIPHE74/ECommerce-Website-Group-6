@@ -46,8 +46,9 @@
           <span>Instant EFT (Auto)</span>
         </label>
 
+        <!-- LAYBY OPTION (Only for expensive orders ≥ 1000) -->
         <label 
-          v-if="Number(totalWithShipping) >= 2000"
+          v-if="Number(totalWithShipping) >= 1000"
           class="payment-option"
         >
           <input type="radio" v-model="paymentMethod" value="layby" />
@@ -63,9 +64,9 @@
           <h3>Terms and Conditions</h3>
           <h4>How Layby Works</h4>
           <ul>
-            <li>A 20% non-refundable deposit is required to secure your order.</li>
-            <li>Customers may choose a 12-month or 24-month layby contract</li>
-            <li>The remaining balance will be debited monthly according to contract term.</li>
+            <li>A non-refundable deposit is required to secure your order: 15% for 12 months or 10% for 24 months.</li>
+            <li>Customers may choose a 12-month or 24-month layby contract.</li>
+            <li>The remaining balance is charged automatically each month according to contract term via your selected bank account or PayPal auto-debit method.</li>
             <li>No delivery will be made until full payment is received.</li>
             <li>If payments are missed for 3 consecutive months, the layby account will be placed on hold.</li>
             <li>If no payment is received for 2 additional consecutive months after being placed on hold, the layby account will be cancelled
@@ -106,10 +107,12 @@
 
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import router from '@/router'
 import { useStore } from 'vuex'
 import { formatMoney } from '../utils/currency'
+
+const CHECKOUT_DRAFT_KEY = 'checkout_draft'
 
 const store = useStore()
 
@@ -409,3 +412,5 @@ function placeOrder() {
 }
 
 </style>
+
+
