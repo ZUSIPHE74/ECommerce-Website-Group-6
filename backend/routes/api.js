@@ -34,13 +34,13 @@ router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 
 // Cart routes (protected)
-router.get('/cart/:userId', authMiddleware, getCart);
-router.post('/cart/add', authMiddleware, addToCart);
-router.delete('/cart/remove', authMiddleware, removeFromCart);
-router.put('/cart/update', authMiddleware, updateQuantity);
-router.delete('/cart/clear', authMiddleware, clearCart);
-router.get('/cart/:userId/total', authMiddleware, getCartTotal);
-router.post('/cart/merge', authMiddleware, mergeCart);
+router.get('/cart/:userId', getCart);
+router.post('/cart/add', addToCart);
+router.delete('/cart/remove', removeFromCart);
+router.put('/cart/update', updateQuantity);
+router.delete('/cart/clear', clearCart);
+router.get('/cart/:userId/total', getCartTotal);
+router.post('/cart/merge', mergeCart);
 
 // Auth routes
 router.post('/register', loginController.registerUser);

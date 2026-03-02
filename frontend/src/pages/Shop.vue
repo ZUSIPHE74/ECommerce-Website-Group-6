@@ -295,27 +295,30 @@ export default {
     },
     
     async addToCart(product) {
-      if (product.stock === 0) return;
-      
-      this.isAddingToCart = true;
-      
-      try {
-        const userId = Number(localStorage.getItem('userId')) || 1;
-        await this.$store.dispatch('addToCart', {
-          user_Id: userId,
-          product_Id: product.id
-        });
-        
-        this.showToastMessage('Product added to cart!', 'success');
-        this.$emit('cart-updated');
-      } catch (err) {
-        console.error('Error adding to cart:', err);
-        this.showToastMessage('Failed to add to cart', 'error');
-      } finally {
-        this.isAddingToCart = false;
-      }
-    },
+  if (product.stock === 0) return;
+  
+  this.isAddingToCart = true;
+  
+  try {
+    const userId = Number(localStorage.getItem('userId')) || 1;
+    await this.$store.dispatch('addToCart', {
+      user_Id: userId,
+      product_Id: product.id
+    });
     
+    this.showToastMessage('Product added to cart!', 'success');
+    this.$emit('cart-updated');
+  } catch (err) {
+    console.error('Detailed error:', err);
+    // Log the actual response if available
+    if (err.response) {
+      console.error('Error response:', err.response.data);
+    }
+    this.showToastMessage('Failed to add to cart: ' + err.message, 'error');
+  } finally {
+    this.isAddingToCart = false;
+  }
+},
     buyNow(product) {
       if (product.stock === 0) {
         this.showToastMessage('Product is out of stock', 'error');

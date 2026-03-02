@@ -26,52 +26,60 @@ class Cart {
   }
 
   // Add item to cart
-  static async addItem(userId, productId) {
-    const connection = await pool.getConnection();
-    
-    try {
-      await connection.beginTransaction();
 
-      // Check if product exists and has stock
-      const [product] = await connection.query(
-        'SELECT product_id, stock FROM products WHERE product_id = ?',
-        [productId]
-      );
+static async addItem(userId, productId) {  // Note: parameters are userId, productId
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.beginTransaction();
 
-      if (product.length === 0) {
-        throw new Error('Product not found');
-      }
+    // Check if product exists
+    const [product] = await connection.query(
+      'SELECT product_id, stock FROM products WHERE product_id = ?',
+      [productId]  // Use productId parameter
+    );
 
-      // Check if item already exists in cart
-      const [existing] = await connection.query(
-        'SELECT * FROM cart_items WHERE user_id = ? AND product_id = ?',
+    console.log('Product found:', product);
+
+    if (product.length === 0) {
+      throw new Error('Product not found');
+    }
+
+    // Check if item already exists in cart
+    const [existing] = await connection.query(
+      'SELECT * FROM cart_items WHERE user_id = ? AND product_id = ?',
+      [userId, productId]  // Use userId and productId parameters
+    );
+
+    console.log('Existing cart item:', existing);
+
+    if (existing.length > 0) {
+      // Update quantity
+      await connection.query(
+        'UPDATE cart_items SET quantity = quantity + 1 WHERE user_id = ? AND product_id = ?',
         [userId, productId]
       );
-
-      if (existing.length > 0) {
-        // Update quantity
-        await connection.query(
-          'UPDATE cart_items SET quantity = quantity + 1 WHERE user_id = ? AND product_id = ?',
-          [userId, productId]
-        );
-      } else {
-        // Insert new item
-        await connection.query(
-          'INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, 1)',
-          [userId, productId]
-        );
-      }
-
-      await connection.commit();
-      return { success: true, message: 'Item added to cart' };
-
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
+      console.log('Updated existing cart item quantity');
+    } else {
+      // Insert new item
+      await connection.query(
+        'INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, 1)',
+        [userId, productId]  // Insert with correct column names
+      );
+      console.log('Inserted new cart item');
     }
+
+    await connection.commit();
+    return { success: true, message: 'Item added to cart' };
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error in Cart.addItem:', error);
+    throw error;
+  } finally {
+    connection.release();
   }
+}
 
   // Remove item from cart
   static async removeItem(userId, productId) {

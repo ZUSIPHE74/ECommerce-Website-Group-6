@@ -37,7 +37,7 @@ app.get('/products', async (req, res) => {
 // =================
 
 // Get cart items for a specific user
-app.get('/cart/:userId', async (req, res) => {
+app.get('/api/cart/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
 
@@ -57,7 +57,7 @@ app.get('/cart/:userId', async (req, res) => {
 });
 
 // Add an item to cart (or increase quantity if it already exists)
-app.post('/cart', async (req, res) => {
+app.post('/api/cart', async (req, res) => {
   try {
     const { user_Id, product_Id } = req.body;
     const [existingCart] = await pool.query(
@@ -87,7 +87,7 @@ app.post('/cart', async (req, res) => {
 });
 
 // Update cart item quantity
-app.patch('/cart', async (req, res) => {
+app.patch('/api/cart', async (req, res) => {
   try {
     const { user_Id, product_Id, quantity } = req.body;
     const parsedQty = Number(quantity);
@@ -109,7 +109,7 @@ app.patch('/cart', async (req, res) => {
 });
 
 // Remove an item from cart
-app.delete('/cart', async (req, res) => {
+app.delete('/api/cart', async (req, res) => {
   try {
     const userId = Number(req.body?.user_Id ?? req.query?.user_Id);
     const productId = Number(req.body?.product_Id ?? req.query?.product_Id);
@@ -147,7 +147,7 @@ app.delete('/cart', async (req, res) => {
 });
 
 // Clear all cart items 
-app.delete('/cart/:userId', async (req, res) => {
+app.delete('/api/cart/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const [result] = await pool.query(
