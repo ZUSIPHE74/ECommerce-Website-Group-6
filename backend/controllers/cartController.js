@@ -30,9 +30,12 @@ export const getCart = async (req, res) => {
 };
 
 // Add item to cart
+
 export const addToCart = async (req, res) => {
   try {
     const { user_Id, product_Id } = req.body;
+    
+    console.log('Add to cart request:', { user_Id, product_Id });
 
     if (!user_Id || !product_Id) {
       return res.status(400).json({
@@ -41,6 +44,7 @@ export const addToCart = async (req, res) => {
       });
     }
 
+    // Use the correct database column names (user_id, product_id)
     const result = await Cart.addItem(user_Id, product_Id);
 
     res.json({
@@ -50,14 +54,6 @@ export const addToCart = async (req, res) => {
 
   } catch (error) {
     console.error('Error in addToCart controller:', error);
-    
-    if (error.message === 'Product not found') {
-      return res.status(404).json({
-        success: false,
-        message: 'Product not found'
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: 'Error adding item to cart',

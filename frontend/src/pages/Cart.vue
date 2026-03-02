@@ -114,8 +114,8 @@ onMounted(() => {
 // Remove item from cart
 function removeItem(item) {
   const resolvedUserId = Number(props.userId || localStorage.getItem('userId')) || 1
-  // FIXED: More robust product ID detection
-  const productId = Number(item?.product_id ?? item?.product_Id ?? item?.id)
+  // Make sure we're using the correct property name
+  const productId = Number(item?.product_id ?? item?.id)
 
   if (!productId) {
     console.error('Could not determine product ID', item)
@@ -124,7 +124,7 @@ function removeItem(item) {
 
   store.dispatch('removeFromCart', {
     user_Id: resolvedUserId,
-    product_Id: productId
+    product_Id: productId  // Make sure this matches what the backend expects
   })
 }
 
@@ -140,7 +140,7 @@ function updateItemQuantity(productId, quantity) {
 
   store.dispatch('updateQuantity', {
     user_Id: resolvedUserId,
-    product_Id: productId,
+    product_Id: productId,  // Make sure this matches
     quantity: safeQuantity
   })
 }
