@@ -9,7 +9,6 @@ import {
   deleteProduct
 } from '../controllers/shopProductsController.js';
 import loginController from '../controllers/loginController.js';
-import * as cartController from '../controllers/cartController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { createOrder } from '../controllers/orderController.js';
 import { submitContact } from '../controllers/contactController.js';
