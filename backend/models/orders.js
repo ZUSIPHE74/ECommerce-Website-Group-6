@@ -1,4 +1,4 @@
-const db = require("../config/database.js");
+import db from '../config/database.js';
 
 class OrderModel {
   static async createOrder(userId, totalPrice, currencyCode, rate) {
@@ -16,7 +16,7 @@ class OrderModel {
     await db.query(
       `UPDATE orders 
         SET status = ?
-        WHERE id = ?`,
+        WHERE order_id = ?`,
       [status, orderId]
     );
   }
@@ -34,9 +34,9 @@ class OrderModel {
 
   static async getOrderDetails(orderId) {
     const [rows] = await db.query(
-      `SELECT oi.*, p.name, p.image_url
+      `SELECT oi.*, p.name
        FROM order_items oi
-       JOIN products p ON oi.product_id = p.id
+       JOIN products p ON oi.product_id = p.product_id
        WHERE oi.order_id = ?`,
       [orderId]
     );
@@ -45,4 +45,4 @@ class OrderModel {
   }
 }
 
-module.exports = OrderModel;
+export default OrderModel;

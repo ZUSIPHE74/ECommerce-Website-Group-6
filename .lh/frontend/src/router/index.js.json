@@ -1,0 +1,18 @@
+{
+    "sourceFile": "frontend/src/router/index.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1772143706237,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1772143706237,
+            "name": "Commit-0",
+            "content": "import { createRouter, createWebHashHistory } from 'vue-router'\r\n\r\nimport Home from '../pages/Home.vue'\r\nimport About from '../pages/About.vue'\r\nimport Shop from '../pages/Shop.vue'\r\nimport Cart from '../pages/Cart.vue'\r\nimport Checkout from '../pages/Checkout.vue'\r\nimport Payment from '../pages/Payment.vue'\r\nimport OrderSuccess from '../pages/OrderSuccess.vue'\r\nimport Login from '../pages/Login.vue'\r\nimport Register from '../pages/Register.vue'\r\nimport ForgotPassword from '../pages/ForgotPassword.vue'\r\nimport Profile from '../pages/Profile.vue'\r\nimport ProfileDashboard from '../pages/ProfileDashboard.vue'\r\nimport Contact from '../pages/Contact.vue'\r\n\r\nconst routes = [\r\n  { path: '/', component: Home, name: 'Home' },\r\n  { path: '/about', component: About, name: 'About' },\r\n  { path: '/shop', component: Shop, name: 'Shop' },\r\n  { path: '/cart', component: Cart, name: 'Cart' },\r\n  { path: '/checkout', component: Checkout, name: 'Checkout' },\r\n  { path: '/payment', component: Payment, name: 'Payment' },\r\n  { path: '/order-success', component: OrderSuccess, name: 'OrderSuccess' },\r\n\r\n  { path: '/login', component: Login, name: 'Login' },\r\n  { path: '/register', component: Register, name: 'Register' },\r\n  { path: '/forgot-password', component: ForgotPassword, name: 'ForgotPassword' },\r\n\r\n  { path: '/profile', redirect: '/account/profile' },\r\n  { path: '/account/profile', component: Profile },\r\n  { path: '/dashboard', component: ProfileDashboard },\r\n  { path: '/account/dashboard', redirect: '/dashboard' },\r\n\r\n  { path: '/:pathMatch(.*)*', redirect: '/' },\r\n\r\n  {\r\n  path: '/contact',\r\n  name: 'Contact',\r\n  component: Contact\r\n}\r\n]\r\n\r\nconst router = createRouter({\r\n  history: createWebHashHistory(),\r\n  routes\r\n})\r\n\r\nexport default router"
+        }
+    ]
+}

@@ -67,9 +67,19 @@ export default {
   },
   async mounted() {
     const token = localStorage.getItem('token');
+    const cachedUser = localStorage.getItem('user');
+    
     if (!token) {
       this.$router.push('/login');
       return;
+    }
+
+    if (cachedUser) {
+      try {
+        this.user = JSON.parse(cachedUser);
+      } catch (e) {
+        console.error("Failed to parse cached user", e);
+      }
     }
 
     try {

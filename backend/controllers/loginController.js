@@ -1,6 +1,6 @@
 import pool from '../config/database.js';  // Add this import at the top
 import User from '../models/Login.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 // Register user

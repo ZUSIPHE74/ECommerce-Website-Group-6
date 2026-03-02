@@ -8,7 +8,7 @@ import mysql from 'mysql2/promise';
             const conn = await mysql.createConnection({
                 host: 'localhost',
                 user: 'root',
-                password: p,
+                password: '',
                 database: 'ecommerce_db'
             });
             console.log(`SUCCESS! Password is: '${p}'`);

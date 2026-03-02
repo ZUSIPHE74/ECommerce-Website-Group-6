@@ -175,6 +175,7 @@ CREATE TABLE `orders` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
   FOREIGN KEY (`currency_code`) REFERENCES `currencies`(`currency_code`));
+  
 
 -- =====================================
 -- ORDER ITEMS
